@@ -418,9 +418,12 @@ namespace CGAL {
 				const FT length  = static_cast<FT>(CGAL::sqrt(CGAL::to_double(squared_length(cross))));
 				const FT dot     = dot_product(m, n);
 
-				const FT angle_rad = static_cast<FT>(std::atan2(CGAL::to_double(length), CGAL::to_double(dot)));
-                const FT angle_deg = angle_rad * FT(180) / static_cast<FT>(CGAL_PI);
+				FT angle_rad = static_cast<FT>(std::atan2(CGAL::to_double(length), CGAL::to_double(dot)));
                 
+                const FT half_pi = static_cast<FT>(CGAL_PI) / FT(2);
+                if (angle_rad > half_pi) angle_rad = static_cast<FT>(CGAL_PI) - angle_rad;
+
+				const FT angle_deg = angle_rad * FT(180) / static_cast<FT>(CGAL_PI);
                 return angle_deg;
 			}
 

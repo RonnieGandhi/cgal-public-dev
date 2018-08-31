@@ -286,8 +286,8 @@ namespace CGAL {
 				for (size_t i = 0; i < clean_facets.size(); ++i) {
 				
 					Color final_color;
-					// if (is_vertical_facet(clean_facets[i])) final_color = Color(255, 255, 255);
-					/* else */ final_color = Color(254, 127, 4);
+					if (is_vertical_facet(clean_facets[i])) final_color = Color(204, 102, 255); // Color(7, 64, 128); // Color(255, 255, 255);
+					else final_color = Color(204, 102, 255); // Color(254, 127, 4);
 
 					add_clean_facet(clean_facets[i], final_color, builder);
 				}
@@ -304,16 +304,24 @@ namespace CGAL {
                 const FT angle      = compute_angle(facet_normal, ground_normal);
                 const FT angle_diff = CGAL::abs(FT(90) - CGAL::abs(angle));
 
-                if (angle_diff < FT(15)) return true;
+                if (angle_diff < FT(5)) return true;
                 return false;
             }
 
             void set_facet_normal(const Clean_facet &vertices, Vector_3 &facet_normal) const {
 
                 CGAL_precondition(facet.indices.size() >= 3);
-                const Point_3 &p1 = vertices.first[0];
-                const Point_3 &p2 = vertices.first[1];
-                const Point_3 &p3 = vertices.first[2];
+                
+				Point_3 p1 = vertices.first[0];
+                Point_3 p2 = vertices.first[1];
+                Point_3 p3 = vertices.first[2];
+					
+				clean_points(vertices, p1, p2, p3);
+
+				/*
+				std::cout << "p: " << p1 << std::endl;
+				std::cout << "p: " << p2 << std::endl;
+				std::cout << "p: " << p3 << std::endl; */
 
                 const Vector_3 v1 = Vector_3(p1, p2);
                 const Vector_3 v2 = Vector_3(p1, p3);
@@ -322,19 +330,38 @@ namespace CGAL {
                 normalize(facet_normal);
 			}
 
+			void clean_points(const Clean_facet &vertices, const Point_3 &p1, const Point_3 &p2, Point_3 &p3) const {
+				
+				for (size_t i = 0; i < vertices.first.size(); ++i) {
+					const Point_3 &p = vertices.first[i];
+
+					if (vertices.first.size() > 3 && CGAL::abs(p1.x() - p2.x()) < m_tolerance && CGAL::abs(p2.x() - p3.x()) < m_tolerance)
+						p3 = p;
+
+					if (vertices.first.size() > 3 && CGAL::abs(p1.y() - p2.y()) < m_tolerance && CGAL::abs(p2.y() - p3.y()) < m_tolerance)
+						p3 = p;
+
+					if (vertices.first.size() > 3 && CGAL::abs(p1.z() - p2.z()) < m_tolerance && CGAL::abs(p2.z() - p3.z()) < m_tolerance)
+						p3 = p;
+				}
+			}
+
 			void set_ground_normal(Vector_3 &ground_normal) const {
 				ground_normal = Vector_3(FT(0), FT(0), FT(1));
 			}
 
             FT compute_angle(const Vector_3 &m, const Vector_3 &n) const {
-				
+
 				const auto cross = cross_product_3(m, n);
 				const FT length  = static_cast<FT>(CGAL::sqrt(CGAL::to_double(squared_length_3(cross))));
 				const FT dot     = dot_product_3(m, n);
 
-				const FT angle_rad = static_cast<FT>(std::atan2(CGAL::to_double(length), CGAL::to_double(dot)));
-                const FT angle_deg = angle_rad * FT(180) / static_cast<FT>(CGAL_PI);
+				FT angle_rad = static_cast<FT>(std::atan2(CGAL::to_double(length), CGAL::to_double(dot)));
                 
+                const FT half_pi = static_cast<FT>(CGAL_PI) / FT(2);
+                if (angle_rad > half_pi) angle_rad = static_cast<FT>(CGAL_PI) - angle_rad;
+
+				const FT angle_deg = angle_rad * FT(180) / static_cast<FT>(CGAL_PI); // std::cout << angle_deg << std::endl;
                 return angle_deg;
 			}
 
@@ -374,6 +401,8 @@ namespace CGAL {
 			}
 
 			void add_ground(Builder &builder) {
+				
+				return;
 				assert(!m_ground.empty());
 
 				const size_t num_vertices = m_ground.size();
