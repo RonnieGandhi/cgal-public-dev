@@ -1346,10 +1346,7 @@ namespace CGAL {
 				m_kinetic_partition_output_creator->create();
 
 				if (!m_silent) {
-					Log exporter; 
-					
-					exporter.save_polyhedron_facets(buildings, "tmp" + std::string(PSR) + "lod_2" + std::string(PSR) + "4_kinetic_partitioning_facets");
-					exporter.save_polyhedrons(buildings, "tmp" + std::string(PSR) + "lod_2" + std::string(PSR) + "4_kinetic_partitioning_polyhedrons");
+					Log exporter; exporter.save_polyhedrons(buildings, "tmp" + std::string(PSR) + "lod_2" + std::string(PSR) + "4_kinetic_partitioning_polyhedrons");
 				}
 			}
 
@@ -1656,10 +1653,18 @@ namespace CGAL {
 					
 					if (m_simple_visibility_method) {
 					
-						if (false) {
+						if (true) {
 							
-							// using graph cut
+							// (07) ----------------------------------
 							applying_graphcut_3(input, ground_height, buildings, exec_step);
+
+
+							// (08) ----------------------------------
+							creating_clean_facets(buildings, false, ++exec_step);
+
+							
+							// (09) ----------------------------------
+							reconstructing_lod2(cdt, buildings, ground_bbox, ground_height, mesh_2, mesh_facet_colors_2, "LOD2", ++exec_step);
 
 							return;
 						}
@@ -1668,17 +1673,13 @@ namespace CGAL {
 						applying_3d_visibility(input, ground_height, buildings, ++exec_step);
 
 
-						// (08-09) ----------------------------------
+						// (08) ----------------------------------
 						creating_clean_facets(buildings, false, ++exec_step);
+						
+						
+						// (09) ----------------------------------
 						reconstructing_lod2(cdt, buildings, ground_bbox, ground_height, mesh_2, mesh_facet_colors_2, "LOD2", ++exec_step);
 
-
-						// (debug) ----------------------------------
-						if (false) {
-							
-							creating_clean_facets(buildings, true, ++exec_step);
-							reconstructing_lod2(cdt, buildings, ground_bbox, ground_height, mesh_2, mesh_facet_colors_2, "LOD2-debug", ++exec_step);
-						}
 						return;
 					}
 

@@ -141,8 +141,8 @@ namespace CGAL {
 
 			void print_output_regions(const Output_regions &output_regions, const Output_colors &output_colors) const {
 
-				Log log;
-				log.print_rg_output_facets(output_regions, output_colors, "tmp" + std::string(PSR) + "lod_2" + std::string(PSR) + "6_region_growing");
+				// Log log;
+				// log.print_rg_output_facets(output_regions, output_colors, "tmp" + std::string(PSR) + "lod_2" + std::string(PSR) + "6_region_growing");
 			}
 
             Color generate_random_color() const {

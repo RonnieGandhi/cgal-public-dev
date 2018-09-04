@@ -84,8 +84,11 @@ namespace CGAL {
             
             using Log = CGAL::LOD::Mylog;
 
+            typename Kernel::Compute_squared_distance_3 squared_distance_3;
+
             Level_of_detail_building_kinetic_partition_output_creator(Buildings &buildings) :
-            m_buildings(buildings) 
+            m_buildings(buildings),
+            m_tolerance(FT(1) / FT(1000))
             { }
 
             void create() const {
@@ -124,6 +127,7 @@ namespace CGAL {
 
         private:
             Buildings &m_buildings;
+            const FT m_tolerance;
 
             void process_building(Building &building) const {
 
@@ -300,6 +304,62 @@ namespace CGAL {
                     }
                 }
             }
+
+            // Move it later to another class! -->>
+
+            void clean_polyhedrons(Building &building) const {
+
+                Polyhedrons &polyhedrons = building.polyhedrons;
+                for (size_t i = 0; i < polyhedrons.size(); ++i) {
+                    
+					Polyhedron &polyhedron = polyhedrons[i];
+                    clean_polyhedron(polyhedron);
+
+                    if (polyhedron.facets.size() < 4) polyhedron.is_valid = false;
+                }
+            }
+
+            void clean_polyhedron(Polyhedron &polyhedron) const {
+
+                Polyhedron_facets   &facets   = polyhedron.facets;
+                Polyhedron_vertices &vertices = polyhedron.vertices;
+
+                clean_facets(vertices, facets);
+            }
+
+            void clean_facets(const Polyhedron_vertices &vertices, Polyhedron_facets &facets) const {
+
+                Polyhedron_facets new_facets;
+
+                for (size_t i = 0; i < facets.size(); ++i) {
+                    const Polyhedron_facet &old_facet = facets[i];
+
+                    Polyhedron_facet new_facet;
+                    const bool success = clean_facet(vertices, old_facet, new_facet);
+
+                    if (success) new_facets.push_back(new_facet);
+                }
+                facets = new_facets;
+            }
+
+            bool clean_facet(const Polyhedron_vertices &vertices, const Polyhedron_facet &old_facet, Polyhedron_facet &new_facet) const {
+
+                new_facet.indices.clear();
+                const size_t num_indices = old_facet.indices.size();
+
+                for (size_t i = 0; i < num_indices; ++i) {
+                    const size_t im = (i + num_indices - 1) % num_indices;
+
+                    const Point_3 &p1 = vertices[old_facet.indices[im]];
+                    const Point_3 &p2 = vertices[old_facet.indices[i]];
+
+                    if (squared_distance_3(p1, p2) < m_tolerance * m_tolerance) continue;
+                    else new_facet.indices.push_back(old_facet.indices[i]);
+                }
+                return new_facet.indices.size() >= 3;
+            }
+            
+            // --<<
         };
 
     } // LOD

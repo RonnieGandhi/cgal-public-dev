@@ -136,19 +136,26 @@ namespace CGAL {
 					CGAL_precondition(in  >= FT(0) && in  <= FT(1));
 					CGAL_precondition(out >= FT(0) && out <= FT(1));
 
-					const FT cost_in  = get_graph_node_cost(in);
-					const FT cost_out = get_graph_node_cost(out);
+					const FT cost_in  = get_graph_node_cost(in, polyhedron);
+					const FT cost_out = get_graph_node_cost(out, polyhedron);
 
 					graph->add_tweights(pNodes[i], CGAL::to_double(cost_in), CGAL::to_double(cost_out));
 				}
 			}
 
-			FT get_graph_node_cost(const FT node_value) const {
-				return get_graph_node_weight() * node_value;
+			FT get_graph_node_cost(const FT node_value, const Polyhedron &polyhedron) const {
+				
+				return get_graph_node_weight(polyhedron) * node_value;
 			} 
 
-			FT get_graph_node_weight() const {
-				return m_beta;
+			FT get_graph_node_weight(const Polyhedron &polyhedron) const {
+				
+				return m_beta * get_polyhedron_weight(polyhedron);
+			}
+
+			FT get_polyhedron_weight(const Polyhedron &polyhedron) const {
+				
+				return FT(1); // compute volume of the polyhedron here!
 			}
 
 			void set_graph_edges(const Graphcut_facets &graphcut_facets, const Node_id *pNodes, Graph *graph) const {

@@ -100,7 +100,9 @@ namespace CGAL {
             m_perturb_polygon_support_plane(true),
             m_merge_walls(true),
             m_area_tolerance(FT(1) / FT(100000)),
-            m_distance_tolerance(FT(1) / FT(100000)) {
+            m_distance_tolerance(FT(1) / FT(100000)),
+            m_use_fixed_disc_radius(true),
+            m_fixed_disc_radius(FT(1) / FT(1000)) {
 
                 srand(time(NULL));
                 estimate_initial_roofs();
@@ -161,6 +163,9 @@ namespace CGAL {
 
             FT m_area_tolerance;
             FT m_distance_tolerance;
+
+            const bool m_use_fixed_disc_radius;
+            const FT   m_fixed_disc_radius;
 
             void estimate_initial_roofs() {
                 
@@ -542,6 +547,9 @@ namespace CGAL {
 
             FT compute_disc_radius(const Polygon &polygon) const {
 
+                if (m_use_fixed_disc_radius) 
+                    return m_fixed_disc_radius;
+                
                 FT min_dist = m_big_value;
 
                 for (size_t i = 0; i < polygon.size(); ++i) {
