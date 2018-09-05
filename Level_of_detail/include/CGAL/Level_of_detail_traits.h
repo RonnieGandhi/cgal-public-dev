@@ -28,7 +28,6 @@
 #include <CGAL/Reconstruction/Level_of_detail_reconstruction.h>
 #include <CGAL/Reconstruction/Level_of_detail_lod2_from_kinetic.h>
 #include <CGAL/Regularizer/Level_of_detail_vertical_regularizer.h>
-#include <CGAL/Selector/Level_of_detail_inside_buildings_selector.h>
 #include <CGAL/Regularizer/Level_of_detail_line_regularizer_jean_philippe.h>
 #include <CGAL/Regularizer/Segment_regularizer_2/Level_of_detail_segment_regularizer_2.h>
 #include <CGAL/Regularizer/Level_of_detail_polygonizer_jean_philippe.h>
@@ -43,7 +42,6 @@
 #include <CGAL/Clutter/Level_of_detail_clutter_filtering.h>
 #include <CGAL/Clutter/Level_of_detail_clutter_processor.h>
 #include <CGAL/Region_growing/Level_of_detail_region_growing_2.h>
-#include <CGAL/Region_growing/Level_of_detail_region_growing_3.h>
 #include <CGAL/Tools/Level_of_detail_parameters_estimator.h>
 #include <CGAL/Container/Level_of_detail_container.h>
 #include <CGAL/Tools/Level_of_detail_parameters.h>
@@ -51,6 +49,13 @@
 #include <CGAL/Tools/Level_of_detail_distortion.h>
 #include <CGAL/Tools/Level_of_detail_coverage.h>
 #include <CGAL/Level_of_detail_enum.h>
+
+// LOD 2 -->
+#include <CGAL/Lod_2/Level_of_detail_inside_buildings_selector_step_0.h>
+#include <CGAL/Lod_2/Level_of_detail_region_growing_step_1.h>
+#include <CGAL/Lod_2/Level_of_detail_cleaner_step_2.h>
+#include <CGAL/Lod_2/Level_of_detail_roofs_estimator_step_3.h>
+#include <CGAL/Lod_2/Level_of_detail_walls_estimator_step_4.h>
 
 namespace CGAL {
 
@@ -149,13 +154,10 @@ namespace CGAL {
             typedef std::pair<typename Kernel::FT, typename Kernel::FT> Visibility_pair;
             typedef std::map<size_t, Visibility_pair> 					Visibility_output;
 
+			typedef CGAL::LOD::Level_of_detail_building_roof_estimator<Kernel, Building, Buildings> Roof_estimator;
+
 			typedef CGAL::LOD::Level_of_detail_classification_shepard_visibility_strategy_2<Kernel, Container_2D, Lod_data_structure, Visibility_output> Visibility_strategy;
 			typedef CGAL::LOD::Level_of_detail_polygon_based_visibility_2<Kernel, Container_3D, Lod_data_structure, Visibility_strategy> 			     Polygon_based_visibility;
-
-			typedef CGAL::LOD::Level_of_detail_inside_buildings_selector<Kernel, Container_3D, CDT, Buildings> Inside_buildings_selector;
-			typedef CGAL::LOD::Level_of_detail_region_growing_3<Kernel, Container_3D, CDT, Buildings> 		   Region_growing_3;
-
-			typedef CGAL::LOD::Level_of_detail_building_roof_cleaner<Kernel, Container_3D, CDT, Buildings> Roof_cleaner;
 			
 			typedef CGAL::LOD::Level_of_detail_building_roof_estimator_box_strategy<Kernel, Container_3D, Building> 	 Input_strategy;
 			typedef CGAL::LOD::Level_of_detail_building_partition_input<Kernel, Container_3D, Buildings, Input_strategy> Partition_input;
@@ -163,8 +165,6 @@ namespace CGAL {
 
 			typedef CGAL::LOD::Level_of_detail_building_kinetic_partition_input_creator<Kernel, Container_3D, Building, Buildings>  Kinetic_partition_input_creator;
 			typedef CGAL::LOD::Level_of_detail_building_kinetic_partition_output_creator<Kernel, Building, Buildings> 				Kinetic_partition_output_creator;
-
-			typedef CGAL::LOD::Level_of_detail_building_roof_estimator<Kernel, Building, Buildings> Roof_estimator;
 
 			typedef CGAL::LOD::Level_of_detail_lod2<Kernel, Building, Buildings, Mesh> 		     		 LOD2_reconstruction;
 			typedef CGAL::LOD::Level_of_detail_lod2_from_kinetic<Kernel, CDT, Building, Buildings, Mesh> Kinetic_LOD2_reconstruction;
@@ -179,6 +179,13 @@ namespace CGAL {
 			typedef CGAL::LOD::Level_of_detail_building_roofs_creator<Kernel, Container_3D, Building, Buildings> Roofs_creator;
 
 			typedef CGAL::LOD::Level_of_detail_graphcut_3<Kernel, Container_3D, Building, Buildings> Graphcut_3;
+
+			// LOD 2 -->
+			typedef CGAL::LOD::Level_of_detail_inside_buildings_selector_step_0<Kernel, Container_3D, CDT, Buildings> Inside_buildings_selector;
+			typedef CGAL::LOD::Level_of_detail_region_growing_step_1<Kernel, Container_3D, CDT, Buildings> 		  	  Region_growing_3;
+			typedef CGAL::LOD::Level_of_detail_cleaner_step_2<Kernel, Container_3D, CDT, Buildings> 		  		  Roof_cleaner;
+			typedef CGAL::LOD::Level_of_detail_roofs_estimator_step_3<Kernel, Container_3D, Building, Buildings> 	  Initial_roofs_estimator;
+			typedef CGAL::LOD::Level_of_detail_walls_estimator_step_4<Kernel, Building, Buildings> 	  				  Initial_walls_estimator;
 		};
 	}
 }

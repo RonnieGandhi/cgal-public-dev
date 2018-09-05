@@ -1,11 +1,5 @@
-#ifndef CGAL_LEVEL_OF_DETAIL_REGION_GROWING_3_H
-#define CGAL_LEVEL_OF_DETAIL_REGION_GROWING_3_H
-
-#if defined(WIN32) || defined(_WIN32) 
-#define PSR "\\"
-#else 
-#define PSR "/" 
-#endif 
+#ifndef CGAL_LEVEL_OF_DETAIL_REGION_GROWING_STEP_1_H
+#define CGAL_LEVEL_OF_DETAIL_REGION_GROWING_STEP_1_H
 
 // STL includes.
 #include <map>
@@ -21,19 +15,18 @@
 #include <CGAL/Simple_cartesian.h>
 
 // New CGAL includes.
-#include <CGAL/Mylog/Mylog.h>
 #include <CGAL/Level_of_detail_enum.h>
-#include <CGAL/Region_growing/Region_growing_simon_3/Plane.h>
-#include <CGAL/Region_growing/Region_growing_simon_3/Shape_base.h>
-#include <CGAL/Region_growing/Region_growing_simon_3/Region_growing.h>
-#include <CGAL/Region_growing/Region_growing_simon_3/Shape_detection_traits.h>
+#include <CGAL/Lod_2/Region_growing_simon_3/Plane.h>
+#include <CGAL/Lod_2/Region_growing_simon_3/Shape_base.h>
+#include <CGAL/Lod_2/Region_growing_simon_3/Region_growing.h>
+#include <CGAL/Lod_2/Region_growing_simon_3/Shape_detection_traits.h>
 
 namespace CGAL {
 
 	namespace LOD {
 
 		template<class KernelTraits, class InputContainer, class InputCDT, class InputBuildings>
-		class Level_of_detail_region_growing_3 {
+		class Level_of_detail_region_growing_step_1 {
 
 		public:
             typedef KernelTraits   Kernel;
@@ -73,13 +66,13 @@ namespace CGAL {
             using Shape          = typename Region_growing::Shape;
             using Index_iterator = std::vector<size_t>::const_iterator;
 
-            Level_of_detail_region_growing_3(const Input &input) : 
+            Level_of_detail_region_growing_step_1(const Input &input) :
             m_input(input), 
             m_epsilon(-FT(1)),
 			m_cluster_epsilon(-FT(1)),
 			m_normal_threshold(-FT(1)),
-			m_min_points(0),
-            m_silent(false) { }
+			m_min_points(0) 
+            { }
 
             void detect(Buildings &buildings) const {
                 
@@ -88,18 +81,7 @@ namespace CGAL {
                     
                     Building &building = (*bit).second;
                     grow_regions(building);
-
-                    // if (building.shapes.size() == 0)
-                    //     building.is_valid = false;
                 }
-
-                if (!m_silent) {
-                    Log exporter; exporter.export_shapes_inside_buildings(buildings, m_input, "tmp" + std::string(PSR) + "lod_2" + std::string(PSR) + "1_region_growing");
-                }
-            }
-            
-            void make_silent(const bool new_state) {
-                m_silent = new_state;
             }
 
             void set_epsilon(const FT new_value) {
@@ -128,7 +110,6 @@ namespace CGAL {
 
         private:
             const Input &m_input;
-            bool  m_silent;
 
             FT m_epsilon;
             FT m_cluster_epsilon;
@@ -147,6 +128,7 @@ namespace CGAL {
             }
 
             void set_points(const Indices &indices, Point_set &points) const {
+                
                 points.clear();
                 points.add_normal_map();
 
@@ -234,4 +216,4 @@ namespace CGAL {
     }
 }
 
-#endif // CGAL_LEVEL_OF_DETAIL_REGION_GROWING_3_H
+#endif // CGAL_LEVEL_OF_DETAIL_REGION_GROWING_STEP_1_H

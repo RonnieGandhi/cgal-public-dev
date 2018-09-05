@@ -540,6 +540,11 @@ namespace CGAL {
 			}
 
 			template<class Buildings>
+			void save_building_walls(const Buildings &buildings, const std::string &filename, const bool use_random_color = false) {
+
+			}
+
+			template<class Buildings>
 			void save_building_roofs_without_faces(const Buildings &buildings, const std::string &filename, const bool use_random_color = false) {
 
 				clear();
@@ -610,7 +615,7 @@ namespace CGAL {
 							out << count++ << " ";
 						}
 						if (!use_random_color) out << bit->second.color << std::endl;
-						out << generate_random_color() << std::endl;
+						else out << generate_random_color() << std::endl;
 					}
 				}
 				save(filename, ".ply");

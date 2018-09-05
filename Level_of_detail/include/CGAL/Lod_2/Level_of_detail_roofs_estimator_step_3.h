@@ -1,5 +1,5 @@
-#ifndef CGAL_LEVEL_OF_DETAIL_BUILDING_ROOFS_ESTIMATOR_H
-#define CGAL_LEVEL_OF_DETAIL_BUILDING_ROOFS_ESTIMATOR_H
+#ifndef CGAL_LEVEL_OF_DETAIL_ROOFS_ESTIMATOR_STEP_3_H
+#define CGAL_LEVEL_OF_DETAIL_ROOFS_ESTIMATOR_STEP_3_H
 
 // STL includes.
 #include <vector>
@@ -10,15 +10,15 @@
 #include <CGAL/Simple_cartesian.h>
 
 // New CGAL includes.
-#include <CGAL/Buildings/Utils/Level_of_detail_diagonalize_traits.h>
-#include <CGAL/Buildings/Roofs/Estimation/Level_of_detail_building_roof_estimator_box_strategy.h>
+#include <CGAL/Lod_2/Roofs_estimator/Level_of_detail_roofs_diagonalize_traits.h>
+#include <CGAL/Lod_2/Roofs_estimator/Level_of_detail_roofs_estimator_box_strategy.h>
 
 namespace CGAL {
 
 	namespace LOD {
 
 		template<class InputKernel, class InputContainer, class InputBuilding, class InputBuildings>
-		class Level_of_detail_building_roofs_estimator {
+		class Level_of_detail_roofs_estimator_step_3 {
             
         public:
             typedef InputKernel    Kernel;
@@ -39,16 +39,16 @@ namespace CGAL {
             using Points_3 = std::vector<Point_3>;
 
             using Local_kernel       = CGAL::Simple_cartesian<double>;
-            using Diagonalize_traits = CGAL::LOD::Eigen_diagonalize_traits_lod<double, 3>;
+            using Diagonalize_traits = CGAL::LOD::Eigen_roofs_diagonalize_traits<double, 3>;
 
 			using Point_3ft = typename Local_kernel::Point_3;
             using Plane_3ft = typename Local_kernel::Plane_3;
 
             using Points_3ft = std::vector<Point_3ft>;
 
-            using Roof_estimation_strategy = CGAL::LOD::Level_of_detail_building_roof_estimator_box_strategy<Kernel, Input, Building>;
+            using Roof_estimation_strategy = CGAL::LOD::Level_of_detail_roofs_estimator_box_strategy<Kernel, Input, Building>;
 
-            Level_of_detail_building_roofs_estimator(const Input &input, Buildings &buildings) :
+            Level_of_detail_roofs_estimator_step_3(const Input &input, Buildings &buildings) :
             m_input(input),
             m_buildings(buildings),
             m_strategy(input)
@@ -160,4 +160,4 @@ namespace CGAL {
     }
 }
 
-#endif // CGAL_LEVEL_OF_DETAIL_BUILDING_ROOFS_ESTIMATOR_H
+#endif // CGAL_LEVEL_OF_DETAIL_ROOFS_ESTIMATOR_STEP_3_H

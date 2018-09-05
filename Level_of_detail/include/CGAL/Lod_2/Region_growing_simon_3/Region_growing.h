@@ -22,7 +22,7 @@
 
 #include <CGAL/license/Point_set_shape_detection_3.h>
 
-#include <CGAL/Region_growing/Region_growing_simon_3/Plane.h>
+#include <CGAL/Lod_2/Region_growing_simon_3/Plane.h>
 
 #include <CGAL/Orthogonal_k_neighbor_search.h>
 #include <CGAL/Fuzzy_sphere.h>
@@ -36,7 +36,6 @@
 
 namespace CGAL {
 namespace Shape_detection_simon_3 {
-
 
 /*!
 \ingroup PkgPointSetShapeDetection3
@@ -110,7 +109,6 @@ shape. The implementation follows \cgalCite{cgal:lm-clscm-12}.
     };
 #endif
 
-
     /// \cond SKIP_IN_MANUAL
     struct Filter_unassigned_points {
       Filter_unassigned_points() : m_shape_index(dummy) {}
@@ -165,7 +163,6 @@ shape. The implementation follows \cgalCite{cgal:lm-clscm-12}.
     };
     /// @}
 
-    
   private:
 
     class My_point_map
@@ -203,7 +200,6 @@ shape. The implementation follows \cgalCite{cgal:lm-clscm-12}.
     typedef CGAL::Orthogonal_k_neighbor_search<Search_traits> Neighbor_search;
     typedef typename Neighbor_search::Distance Distance;
     
-
     class Sort_by_planarity
     {
       Input_iterator m_first;
@@ -261,7 +257,6 @@ shape. The implementation follows \cgalCite{cgal:lm-clscm-12}.
       }
     };
 
-
     // Creates a function pointer for instancing shape instances.
     template <class ShapeT>
     static Shape *factory() {
@@ -295,7 +290,7 @@ shape. The implementation follows \cgalCite{cgal:lm-clscm-12}.
     
   public:
 
-    /// \name Initialization
+  /// \name Initialization
   /// @{
 
     /*! 
@@ -726,12 +721,10 @@ shape. The implementation follows \cgalCite{cgal:lm-clscm-12}.
     }
     /// @}
 
-
   };
 
-
 } // namespace Shape_detection_3
-} // namespace CGAL
 
+} // namespace CGAL
 
 #endif // CGAL_SHAPE_DETECTION_REGION_GROWING_3_H

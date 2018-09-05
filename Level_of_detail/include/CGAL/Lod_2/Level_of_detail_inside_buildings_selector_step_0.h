@@ -1,11 +1,5 @@
-#ifndef CGAL_LEVEL_OF_DETAIL_INSIDE_BUILDINGS_SELECTOR_H
-#define CGAL_LEVEL_OF_DETAIL_INSIDE_BUILDINGS_SELECTOR_H
-
-#if defined(WIN32) || defined(_WIN32) 
-#define PSR "\\"
-#else 
-#define PSR "/"
-#endif
+#ifndef CGAL_LEVEL_OF_DETAIL_INSIDE_BUILDINGS_SELECTOR_STEP_0_H
+#define CGAL_LEVEL_OF_DETAIL_INSIDE_BUILDINGS_SELECTOR_STEP_0_H
 
 // STL includes.
 #include <map>
@@ -13,7 +7,6 @@
 #include <unordered_set>
 
 // New CGAL includes.
-#include <CGAL/Mylog/Mylog.h>
 #include <CGAL/Level_of_detail_enum.h>
 
 namespace CGAL {
@@ -21,7 +14,7 @@ namespace CGAL {
 	namespace LOD {
 
 		template<class KernelTraits, class InputContainer, class InputCDT, class InputBuildings>
-		class Level_of_detail_inside_buildings_selector {
+		class Level_of_detail_inside_buildings_selector_step_0 {
 
         public:
             typedef KernelTraits   Kernel;
@@ -47,11 +40,12 @@ namespace CGAL {
             using Building          = CGAL::LOD::Building<Kernel, CDT>;
             using Building_iterator = typename Buildings::iterator;
 
-            using Log = CGAL::LOD::Mylog;
-
-            Level_of_detail_inside_buildings_selector(const Input &input, const CDT &cdt, const Indices &indices) : 
-            m_input(input), m_cdt(cdt), m_indices(indices),
-            m_silent(false), m_height_threshold(FT(1) / FT(1000000)) { }
+            Level_of_detail_inside_buildings_selector_step_0(const Input &input, const CDT &cdt, const Indices &indices) : 
+            m_input(input), 
+            m_cdt(cdt), 
+            m_indices(indices),
+            m_height_threshold(FT(1) / FT(1000000)) 
+            { }
 
             void add_indices(Buildings &buildings) const {
                 
@@ -88,26 +82,6 @@ namespace CGAL {
                     if (!is_valid_building(buildings, building)) building.is_valid = false; 
                     if (building.interior_indices.size() < 3)    building.is_valid = false;
                 }
-
-                /*
-                for (Building_iterator bit = buildings.begin(); bit != buildings.end(); ++bit) {
-                    Building &building = (*bit).second;
-
-                    if (is_valid_building(buildings, building)) {
-                        add_indices_to_building(building);
-                        
-                        if (building.interior_indices.size() < 3) 
-                            building.is_valid = false;
-                    }
-                } */
-
-                if (!m_silent) {
-                    Log exporter; exporter.export_points_inside_buildings(buildings, m_input, "tmp" + std::string(PSR) + "lod_2" + std::string(PSR) + "0_points_inside_buildings");
-                }
-            }
-
-            void make_silent(const bool new_state) {
-                m_silent = new_state;
             }
 
         private:
@@ -115,7 +89,6 @@ namespace CGAL {
             const CDT     &m_cdt;
             const Indices &m_indices;
 
-            bool  m_silent;
             const FT m_height_threshold;
 
 			bool is_valid_building(const Buildings &buildings, Building &building) const {
@@ -184,4 +157,4 @@ namespace CGAL {
     }
 }
 
-#endif // CGAL_LEVEL_OF_DETAIL_INSIDE_BUILDINGS_SELECTOR_H
+#endif // CGAL_LEVEL_OF_DETAIL_INSIDE_BUILDINGS_SELECTOR_STEP_0_H

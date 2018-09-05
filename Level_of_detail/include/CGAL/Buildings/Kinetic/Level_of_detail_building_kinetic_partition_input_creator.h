@@ -19,7 +19,7 @@
 
 // New CGAL includes.
 #include <CGAL/Region_growing/Level_of_detail_linear_region_growing.h>
-#include <CGAL/Buildings/Roofs/Level_of_detail_building_roofs_estimator.h>
+#include <CGAL/Lod_2/Level_of_detail_roofs_estimator_step_3.h>
 
 namespace CGAL {
 
@@ -65,7 +65,7 @@ namespace CGAL {
             typename Kernel::Compute_scalar_product_3 		  dot_product_3;
 			typename Kernel::Construct_cross_product_vector_3 cross_product_3;
 
-            using Initial_roofs_estimator = CGAL::LOD::Level_of_detail_building_roofs_estimator<Kernel, Input, Building, Buildings>;
+            using Initial_roofs_estimator = CGAL::LOD::Level_of_detail_roofs_estimator_step_3<Kernel, Input, Building, Buildings>;
 
             using Segment_region_growing = CGAL::LOD::Level_of_detail_linear_region_growing<Kernel>;
             

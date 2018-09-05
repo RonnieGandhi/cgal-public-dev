@@ -24,7 +24,6 @@
 
 #include <CGAL/license/Point_set_shape_detection_3.h>
 
-
 #include <vector>
 #include <set>
 #include <stack>
@@ -644,11 +643,9 @@ namespace CGAL {
       }
     }
 
-
     virtual bool supports_connected_component() const {
       return false;
     };
-
     
     // ------------------------------------------------------------------------
     // Utilities
@@ -716,6 +713,9 @@ namespace CGAL {
     Normal_map m_normal_pmap;
     /// \endcond
   };  
+
 }
+
 }
+
 #endif

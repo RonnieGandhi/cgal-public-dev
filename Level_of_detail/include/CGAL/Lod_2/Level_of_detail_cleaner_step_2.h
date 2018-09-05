@@ -1,11 +1,5 @@
-#ifndef CGAL_LEVEL_OF_DETAIL_BUILDING_ROOF_CLEANER_H
-#define CGAL_LEVEL_OF_DETAIL_BUILDING_ROOF_CLEANER_H
-
-#if defined(WIN32) || defined(_WIN32) 
-#define PSR "\\" 
-#else 
-#define PSR "/" 
-#endif 
+#ifndef CGAL_LEVEL_OF_DETAIL_CLEANER_STEP_2_H
+#define CGAL_LEVEL_OF_DETAIL_CLEANER_STEP_2_H
 
 // STL includes.
 #include <map>
@@ -22,7 +16,6 @@
 #include <CGAL/Orthogonal_k_neighbor_search.h>
 
 // New CGAL includes.
-#include <CGAL/Mylog/Mylog.h>
 #include <CGAL/Level_of_detail_enum.h>
 
 namespace CGAL {
@@ -30,7 +23,7 @@ namespace CGAL {
 	namespace LOD {
 
 		template<class KernelTraits, class InputContainer, class InputCDT, class InputBuildings>
-		class Level_of_detail_building_roof_cleaner {
+		class Level_of_detail_cleaner_step_2 {
 
         public:
             typedef KernelTraits   Kernel;
@@ -55,7 +48,6 @@ namespace CGAL {
             using Building          = CGAL::LOD::Building<Kernel, CDT>;
             using Building_iterator = typename Buildings::iterator;
             
-            using Log     = CGAL::LOD::Mylog;
             using Indices = std::vector<int>;
             using Points  = std::vector<Point_3>;
 
@@ -68,10 +60,9 @@ namespace CGAL {
 			using Fuzzy_sphere    = CGAL::Fuzzy_sphere<Search_traits>;
 			using Tree            = typename Neighbor_search::Tree;
 
-            Level_of_detail_building_roof_cleaner(const Input &input, const FT ground_height) : 
+            Level_of_detail_cleaner_step_2(const Input &input, const FT ground_height) : 
             m_input(input), 
-            m_ground_height(ground_height), 
-            m_silent(false),
+            m_ground_height(ground_height),
             m_scale_upper_bound(-FT(1)),
             m_max_percentage(FT(80)),
             m_angle_threshold(FT(25)),
@@ -110,14 +101,6 @@ namespace CGAL {
                     Building &building = (*bit).second;
                     if (building.is_valid) clean_building_roofs(building);
                 }
-
-                if (!m_silent) {
-                    Log exporter; exporter.export_shapes_inside_buildings(buildings, m_input, "tmp" + std::string(PSR) + "lod_2" + std::string(PSR) + "2_clean_regions");
-                }
-            }
-
-            void make_silent(const bool new_state) {
-                m_silent = new_state;
             }
 
             void set_scale_upper_bound(const FT new_value) {
@@ -135,8 +118,6 @@ namespace CGAL {
         private:
             const Input &m_input;
             const FT m_ground_height;
-
-            bool m_silent;
 
             FT m_scale_upper_bound;
             FT m_max_percentage;
@@ -195,9 +176,6 @@ namespace CGAL {
                 if (m_apply_thin_criteria)        apply_thin_criteria(shapes, indices);
                 
                 update_shapes(indices, shapes);
-
-                // if (shapes.size() == 0) 
-                //     building.is_valid = false;
             }
 
             void apply_thin_criteria(const Shapes &shapes, Indices &indices) const {
@@ -497,4 +475,4 @@ namespace CGAL {
     }
 }
 
-#endif // CGAL_LEVEL_OF_DETAIL_BUILDING_ROOF_CLEANER_H
+#endif // CGAL_LEVEL_OF_DETAIL_CLEANER_STEP_2_H

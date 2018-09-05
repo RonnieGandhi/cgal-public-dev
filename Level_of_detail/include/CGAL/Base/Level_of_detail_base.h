@@ -126,7 +126,7 @@ namespace CGAL {
 			typedef typename Traits::Kinetic_partition_output_creator Kinetic_partition_output_creator;
 
 			typedef typename Traits::Roof_estimator Roof_estimator;
-			
+
 			typedef typename Traits::LOD2_reconstruction 		 LOD2_reconstruction;
 			typedef typename Traits::Kinetic_LOD2_reconstruction Kinetic_LOD2_reconstruction;
 			
@@ -140,6 +140,9 @@ namespace CGAL {
 
 			typedef typename Traits::Roofs_creator Roofs_creator;
 			typedef typename Traits::Graphcut_3    Graphcut_3;
+
+			typedef typename Traits::Initial_roofs_estimator Initial_roofs_estimator;
+			typedef typename Traits::Initial_walls_estimator Initial_walls_estimator;
 
 
 			// Extra typedefs.
@@ -1158,6 +1161,23 @@ namespace CGAL {
 				estimate_lod1_coverage(input);
 			}
 
+			void translating_lod0_and_lod1(
+			const FT ground_height, 
+			Mesh &mesh_0, const Mesh_facet_colors &mesh_facet_colors_0, 
+			Mesh &mesh_1, const Mesh_facet_colors &mesh_facet_colors_1, 
+			const size_t exec_step) {
+
+				// Translate LOD0 and LOD1 results to the ground plane.
+				std::cout << "(" << exec_step << ") translating lod0 and lod1;" << std::endl;
+
+				m_utils.translate_mesh_along_z(mesh_0, ground_height);
+				m_utils.translate_mesh_along_z(mesh_1, ground_height);
+
+				Log lod_saver;
+				lod_saver.save_mesh_as_ply(mesh_0, mesh_facet_colors_0, "LOD0");
+				lod_saver.save_mesh_as_ply(mesh_1, mesh_facet_colors_1, "LOD1");
+			}
+
 			void creating_2d_partition_input(const Container_3D &input, Buildings &buildings, const size_t exec_step) {
 				
 				// Fit a plane to each found region of the given roof and compute its bounding box.
@@ -1242,6 +1262,18 @@ namespace CGAL {
 				}
 			}
 
+			void applying_3d_visibility(const Container_3D &input, const FT ground_height, Buildings &buildings, const size_t exec_step) {
+
+				// Apply 3D visibility.
+				std::cout << "(" << exec_step << ") applying 3D visibility;" << std::endl;
+
+				m_visibility_3 = std::make_shared<Visibility_3>(input, ground_height, buildings);
+				m_visibility_3->apply();
+
+				Log exporter;
+				if (!m_silent) exporter.save_polyhedrons(buildings, "tmp" + std::string(PSR) + "lod_2" + std::string(PSR) + "5_kinetic_polyhedrons_clean");
+			}
+
 			void reconstructing_lod2(const Buildings &buildings, const Ground &ground_bbox, const FT ground_height, Mesh &mesh, Mesh_facet_colors &mesh_facet_colors, const size_t exec_step) {
 
 				// LOD2 reconstruction.
@@ -1254,24 +1286,8 @@ namespace CGAL {
 				lod2_saver.save_mesh_as_ply(mesh, mesh_facet_colors, "LOD2");
 			}
 
-			// Kinetic framework!
 
-			void translating_lod0_and_lod1(
-			const FT ground_height, 
-			Mesh &mesh_0, const Mesh_facet_colors &mesh_facet_colors_0, 
-			Mesh &mesh_1, const Mesh_facet_colors &mesh_facet_colors_1, 
-			const size_t exec_step) {
-
-				// Translate LOD0 and LOD1 results to the ground plane.
-				std::cout << "(" << exec_step << ") translating lod0 and lod1;" << std::endl;
-
-				m_utils.translate_mesh_along_z(mesh_0, ground_height);
-				m_utils.translate_mesh_along_z(mesh_1, ground_height);
-
-				Log lod_saver;
-				lod_saver.save_mesh_as_ply(mesh_0, mesh_facet_colors_0, "LOD0");
-				lod_saver.save_mesh_as_ply(mesh_1, mesh_facet_colors_1, "LOD1");
-			}
+			// LOD 2 -->
 
 			void adding_3d_points_inside_buildings(const Container_3D &input, const CDT &cdt, const Indices &indices, Buildings &buildings, const std::string &name, const size_t exec_step) {
 
@@ -1279,18 +1295,19 @@ namespace CGAL {
 				std::cout << "(" << exec_step << ") adding 3D " << name << " points inside buildings;" << std::endl;
 
 				m_inside_buildings_selector = std::make_shared<Inside_buildings_selector>(input, cdt, indices);
-				
-				m_inside_buildings_selector->make_silent(m_silent);
 				m_inside_buildings_selector->add_indices(buildings);
+
+				if (!m_silent) {
+                    Log exporter; exporter.export_points_inside_buildings(buildings, input, "tmp" + std::string(PSR) + "lod_2" + std::string(PSR) + "0_points_inside_buildings");
+                }
 			}
 
-			void applying_3d_region_growing(const Container_3D &input, Buildings &buildings, const size_t exec_step) {
+			void applying_3d_region_growing_on_points(const Container_3D &input, Buildings &buildings, const size_t exec_step) {
 				
 				// Run region growing on all points that form roofs of the given buildings.
-				std::cout << "(" << exec_step << ") applying 3D region growing;" << std::endl;
+				std::cout << "(" << exec_step << ") applying 3D region growing on points;" << std::endl;
 
 				m_region_growing_3 = std::make_shared<Region_growing_3>(input);
-				m_region_growing_3->make_silent(m_silent);
 
 				m_region_growing_3->set_epsilon(m_region_growing_epsilon_3d);
 				m_region_growing_3->set_cluster_epsilon(m_region_growing_cluster_epsilon_3d);
@@ -1298,12 +1315,17 @@ namespace CGAL {
 				m_region_growing_3->set_minimum_shape_points(m_region_growing_min_points_3d);
 
 				m_region_growing_3->detect(buildings);
+
+				if (!m_silent) {
+                    Log exporter; exporter.export_shapes_inside_buildings(buildings, input, "tmp" + std::string(PSR) + "lod_2" + std::string(PSR) + "1_original_point_regions");
+                }
 			}
 
-			void cleaning_3d_regions(const Container_3D &input, const FT ground_height, Buildings &buildings, const size_t exec_step) {
+			void cleaning_3d_point_regions(const Container_3D &input, const FT ground_height, Buildings &buildings, const size_t exec_step) {
 
 				// Remove all regions detected before that do not satisfy the correct criteria.
-				std::cout << "(" << exec_step << ") cleaning 3D regions;" << std::endl;
+				std::cout << "(" << exec_step << ") cleaning 3D point regions;" << std::endl;
+
 				m_roof_cleaner = std::make_shared<Roof_cleaner>(input, ground_height);
 				
 				m_roof_cleaner->set_scale_upper_bound(m_roof_cleaner_scale);
@@ -1315,9 +1337,41 @@ namespace CGAL {
 				m_roof_cleaner->use_scale_based_criteria(m_roof_cleaner_use_scale_based_criteria);
 				m_roof_cleaner->use_thin_criteria(m_roof_cleaner_use_thin_criteria);
 
-				m_roof_cleaner->make_silent(m_silent);
 				m_roof_cleaner->clean_shapes(buildings);
+
+				if (!m_silent) {
+                    Log exporter; exporter.export_shapes_inside_buildings(buildings, input, "tmp" + std::string(PSR) + "lod_2" + std::string(PSR) + "2_clean_point_regions");
+                }
 			}
+
+			void estimating_kinetic_input_roofs(const Container_3D &input, Buildings &buildings, const size_t exec_step) {
+				
+				// Estimate input roofs.
+				std::cout << "(" << exec_step << ") estimating kinetic input roofs;" << std::endl;
+
+				Initial_roofs_estimator initial_roofs_estimator = Initial_roofs_estimator(input, buildings);
+				initial_roofs_estimator.estimate();
+
+				if (!m_silent) {
+					Log exporter; exporter.save_building_roofs_without_faces(buildings, "tmp" + std::string(PSR) + "lod_2" + std::string(PSR) + "3_initial_roofs", true);
+				}
+			}
+
+			void estimating_kinetic_input_walls(Buildings &buildings, const size_t exec_step) {
+				
+				// Estimate input walls.
+				std::cout << "(" << exec_step << ") estimating kinetic input walls;" << std::endl;
+
+				Initial_walls_estimator initial_walls_estimator = Initial_walls_estimator(buildings);
+				initial_walls_estimator.estimate();
+
+				if (!m_silent) {
+					Log exporter; exporter.save_building_walls(buildings, "tmp" + std::string(PSR) + "lod_2" + std::string(PSR) + "4_initial_walls", true);
+				}
+			}
+
+
+			// not yet handled -->
 
 			void creating_3d_partitioning_input(const Container_3D &input, const FT ground_height, Buildings &buildings, const size_t exec_step) {
 				
@@ -1378,18 +1432,6 @@ namespace CGAL {
 
 				Log exporter;
 				if (!m_silent) exporter.save_polyhedrons(buildings, "tmp" + std::string(PSR) + "lod_2" + std::string(PSR) + "5_graphcut");
-			}
-
-			void applying_3d_visibility(const Container_3D &input, const FT ground_height, Buildings &buildings, const size_t exec_step) {
-
-				// Apply 3D visibility.
-				std::cout << "(" << exec_step << ") applying 3D visibility;" << std::endl;
-
-				m_visibility_3 = std::make_shared<Visibility_3>(input, ground_height, buildings);
-				m_visibility_3->apply();
-
-				Log exporter;
-				if (!m_silent) exporter.save_polyhedrons(buildings, "tmp" + std::string(PSR) + "lod_2" + std::string(PSR) + "5_kinetic_polyhedrons_clean");
 			}
 
 			void creating_clean_facets(Buildings &buildings, const bool all_facets, const size_t exec_step) {
@@ -1464,7 +1506,7 @@ namespace CGAL {
 
 
 			void creating_lod0_and_lod1(const Container_3D &input, 
-			Indices &building_interior_idxs, Box &fitted_ground_box, Ground &ground_bbox, CDT &cdt, Buildings &buildings,
+			Indices &building_interior_idxs, Box &fitted_ground_box, Ground &ground_bbox, FT &ground_height, CDT &cdt, Buildings &buildings,
 			Mesh &mesh_0, 
 			Mesh &mesh_1, 
 			Mesh_facet_colors &mesh_facet_colors_0, 
@@ -1591,61 +1633,103 @@ namespace CGAL {
 
 				// (22) ----------------------------------	
 				reconstructing_lod1(cdt, buildings, mesh_1, mesh_facet_colors_1, ground_bbox, ++exec_step);
+
+
+				// (23) ----------------------------------
+				ground_height = get_average_target_height(fitted_ground_box);
+				translating_lod0_and_lod1(ground_height, mesh_0, mesh_facet_colors_0, mesh_1, mesh_facet_colors_1, ++exec_step);
 			}
 
 
-			void creating_lod2(const Container_3D &input, const Indices &building_interior_idxs, const CDT &cdt, const Box &fitted_ground_box, const Ground &ground_bbox,
-			Buildings &buildings, 
-			Mesh &mesh_0, 
-			Mesh &mesh_1, 
-			Mesh &mesh_2, 
-			const Mesh_facet_colors &mesh_facet_colors_0, 
-			const Mesh_facet_colors &mesh_facet_colors_1,
-				  Mesh_facet_colors &mesh_facet_colors_2) {
+			void creating_lod2(const Container_3D &input, const Indices &building_interior_idxs, const CDT &cdt, const Box &fitted_ground_box, const Ground &ground_bbox, const FT ground_height,
+			Buildings &buildings, Mesh &mesh_2, Mesh_facet_colors &mesh_facet_colors_2) {
+
+				size_t exec_step = 0;
+				std::cout << std::endl << "...CREATING LOD2..." << std::endl << std::endl;
+
+				
+				// (01) ----------------------------------
+				adding_3d_points_inside_buildings(input, cdt, building_interior_idxs, buildings, "interior", ++exec_step);
+				
+
+				// (02) ----------------------------------
+				applying_3d_region_growing_on_points(input, buildings, ++exec_step);
+
+
+				// (03) ----------------------------------
+				cleaning_3d_point_regions(input, ground_height, buildings, ++exec_step);
+
+
+				// (04) ----------------------------------
+				estimating_kinetic_input_roofs(input, buildings, ++exec_step);
+
+
+				// (05) ----------------------------------
+				estimating_kinetic_input_walls(buildings, ++exec_step);
+
+
+				// (04) ----------------------------------
+				// creating_3d_partitioning_input(input, ground_height, buildings, ++exec_step);
+
+
+				// (05) ----------------------------------
+				// creating_3d_partitioning_output(buildings, ++exec_step);
+
+
+				// (06) ----------------------------------
+				// applying_graphcut_3(input, ground_height, buildings, exec_step);
+
+
+				// (07) ----------------------------------
+				// creating_clean_facets(buildings, false, ++exec_step);
+
+
+				// (08) ----------------------------------
+				// reconstructing_lod2(cdt, buildings, ground_bbox, ground_height, mesh_2, mesh_facet_colors_2, "LOD2", ++exec_step);
+			}
+
+
+			void creating_lod2_old(const Container_3D &input, const Indices &building_interior_idxs, const CDT &cdt, const Box &fitted_ground_box, const Ground &ground_bbox, const FT ground_height,
+			Buildings &buildings, Mesh &mesh_2, Mesh_facet_colors &mesh_facet_colors_2) {
 				
 				size_t exec_step = 0;
 				std::cout << std::endl << "...CREATING LOD2..." << std::endl << std::endl;
 
 
 				// (01) ----------------------------------
-				const FT ground_height = get_average_target_height(fitted_ground_box);
-				translating_lod0_and_lod1(ground_height, mesh_0, mesh_facet_colors_0, mesh_1, mesh_facet_colors_1, ++exec_step);
-
-
-				// (02) ----------------------------------
 				clear_interior_indices(buildings);
 				adding_3d_points_inside_buildings(input, cdt, building_interior_idxs, buildings, "interior", ++exec_step);
 
 
-				// (03) ----------------------------------
+				// (02) ----------------------------------
 				applying_3d_region_growing(input, buildings, ++exec_step);
 
 
-				// (04) ----------------------------------
+				// (03) ----------------------------------
 				cleaning_3d_regions(input, ground_height, buildings, ++exec_step);
 
 
 				if (m_use_kenetic) {
 
-					// (05) ----------------------------------
+					// (04) ----------------------------------
 					creating_3d_partitioning_input(input, ground_height, buildings, ++exec_step);
 
 
-					// (06) ----------------------------------
+					// (05) ----------------------------------
 					creating_3d_partitioning_output(buildings, ++exec_step);
 
 				
 					if (m_quality_based_method) {
 
-						// (07) ----------------------------------
+						// (06) ----------------------------------
 						applying_3d_visibility(input, ground_height, buildings, ++exec_step);
 
 						
-						// (08) ----------------------------------
+						// (07) ----------------------------------
 						creating_roofs(input, ground_height, buildings, ++exec_step);
 
 
-						// (09) ----------------------------------
+						// (08) ----------------------------------
 						reconstructing_lod2(buildings, ground_bbox, ground_height, mesh_2, mesh_facet_colors_2, ++exec_step);
 
 						return;
@@ -1655,29 +1739,29 @@ namespace CGAL {
 					
 						if (true) {
 							
-							// (07) ----------------------------------
+							// (06) ----------------------------------
 							applying_graphcut_3(input, ground_height, buildings, exec_step);
 
 
-							// (08) ----------------------------------
+							// (07) ----------------------------------
 							creating_clean_facets(buildings, false, ++exec_step);
 
 							
-							// (09) ----------------------------------
+							// (08) ----------------------------------
 							reconstructing_lod2(cdt, buildings, ground_bbox, ground_height, mesh_2, mesh_facet_colors_2, "LOD2", ++exec_step);
 
 							return;
 						}
 
-						// (07) ----------------------------------
+						// (06) ----------------------------------
 						applying_3d_visibility(input, ground_height, buildings, ++exec_step);
 
 
-						// (08) ----------------------------------
+						// (07) ----------------------------------
 						creating_clean_facets(buildings, false, ++exec_step);
 						
 						
-						// (09) ----------------------------------
+						// (08) ----------------------------------
 						reconstructing_lod2(cdt, buildings, ground_bbox, ground_height, mesh_2, mesh_facet_colors_2, "LOD2", ++exec_step);
 
 						return;
@@ -1690,34 +1774,34 @@ namespace CGAL {
 				}
 
 
-				// (10) ----------------------------------
+				// (9) ----------------------------------
 				creating_2d_partition_input(input, buildings, ++exec_step);
 
 
-				// (11) ----------------------------------
+				// (10) ----------------------------------
 				applying_2d_partitioning(input, ground_height, buildings, ++exec_step);
 
 				
 				if (m_use_cdt) {
 					
-					// (12) ----------------------------------
+					// (11) ----------------------------------
 					creating_cdt_per_each_building(buildings, ++exec_step);
 
 
-					// (13) ----------------------------------
+					// (12) ----------------------------------
 					cleaning_cdt_per_each_building(input, ground_height, buildings, ++exec_step);
  				
 
-					// (14) ----------------------------------
+					// (13) ----------------------------------
 					estimating_cdt_based_roofs_per_each_building(ground_height, buildings, ++exec_step);
 
 				 } else {
 
-					// (15) ----------------------------------
+					// (14) ----------------------------------
 					estimating_initial_roofs(ground_height, buildings, ++exec_step);
 				}
 
-				// (16) ----------------------------------
+				// (15) ----------------------------------
 				reconstructing_lod2(buildings, ground_bbox, ground_height, mesh_2, mesh_facet_colors_2, ++exec_step);
 			}
 
@@ -1747,13 +1831,15 @@ namespace CGAL {
 				
 				CDT cdt;
 				Buildings buildings;
+				
 				Ground ground_bbox;
+				FT ground_height;
 
 				Mesh mesh_0, mesh_1, mesh_2; Mesh_facet_colors mesh_facet_colors_0, mesh_facet_colors_1, mesh_facet_colors_2;
-				creating_lod0_and_lod1(input, building_interior_idxs, fitted_ground_box, ground_bbox, cdt, buildings, mesh_0, mesh_1, mesh_facet_colors_0, mesh_facet_colors_1);
+				creating_lod0_and_lod1(input, building_interior_idxs, fitted_ground_box, ground_bbox, ground_height, cdt, buildings, mesh_0, mesh_1, mesh_facet_colors_0, mesh_facet_colors_1);
 
 				// (lod2) -----------------------------------
-				creating_lod2(input, building_interior_idxs, cdt, fitted_ground_box, ground_bbox, buildings, mesh_0, mesh_1, mesh_2, mesh_facet_colors_0, mesh_facet_colors_1, mesh_facet_colors_2);
+				creating_lod2(input, building_interior_idxs, cdt, fitted_ground_box, ground_bbox, ground_height, buildings, mesh_2, mesh_facet_colors_2);
 
 
 				// --- End ----------->
@@ -1811,9 +1897,8 @@ namespace CGAL {
 			std::shared_ptr<Kinetic_partition_input_creator>  m_kinetic_partition_input_creator;
 			std::shared_ptr<Kinetic_partition_output_creator> m_kinetic_partition_output_creator;
 
-			std::shared_ptr<Roof_estimator> m_roof_estimator;
-
-			std::shared_ptr<Visibility_3> m_visibility_3;
+			std::shared_ptr<Visibility_3> 		 m_visibility_3;
+			std::shared_ptr<Roof_estimator> 	 m_roof_estimator;
 			std::shared_ptr<LOD2_reconstruction> m_lod2;
 
 

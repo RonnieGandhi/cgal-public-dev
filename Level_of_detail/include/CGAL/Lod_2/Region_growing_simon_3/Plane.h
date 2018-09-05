@@ -24,8 +24,7 @@
 
 #include <CGAL/license/Point_set_shape_detection_3.h>
 
-
-#include <CGAL/Region_growing/Region_growing_simon_3/Shape_base.h>
+#include <CGAL/Lod_2/Region_growing_simon_3/Shape_base.h>
 #include <CGAL/number_utils.h>
 
 /*!
@@ -237,6 +236,9 @@ namespace CGAL {
     FT m_d;
     /// \endcond
   };
+
 }
+
 }
+
 #endif

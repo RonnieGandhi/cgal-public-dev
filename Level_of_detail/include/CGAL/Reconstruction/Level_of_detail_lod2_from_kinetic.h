@@ -309,8 +309,6 @@ namespace CGAL {
             }
 
             void set_facet_normal(const Clean_facet &vertices, Vector_3 &facet_normal) const {
-
-                CGAL_precondition(facet.indices.size() >= 3);
                 
 				Point_3 p1 = vertices.first[0];
                 Point_3 p2 = vertices.first[1];
