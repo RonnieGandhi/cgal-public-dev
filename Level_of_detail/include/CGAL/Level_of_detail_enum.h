@@ -147,6 +147,14 @@ namespace CGAL {
                 CGAL::Color color;
             };
 
+			struct Wall {
+				using Wall_boundary = std::vector<Point_3>;
+				Wall_boundary boundary;
+			};
+
+			using Walls = std::vector<Wall>;
+			Walls walls;
+
             using Data_triangle  = std::pair<Triangle_3, Data>;
             using Data_triangles = std::vector<Data_triangle>;
 
@@ -252,7 +260,14 @@ namespace CGAL {
 
 			using Clean_facet  = std::pair<std::vector<Point_3>, CGAL::Color>;
 			using Clean_facets = std::vector<Clean_facet>;
+			
 			Clean_facets clean_facets;
+
+			using Region_facet   = std::vector<Point_3>;
+            using Region_facets  = std::vector<Region_facet>;
+			using Output_regions = std::vector<Region_facets>;
+
+			Output_regions output_regions;
 
 			void clear_interior_indices() {
 				interior_indices.clear();

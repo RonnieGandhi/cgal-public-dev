@@ -56,6 +56,10 @@
 #include <CGAL/Lod_2/Level_of_detail_cleaner_step_2.h>
 #include <CGAL/Lod_2/Level_of_detail_roofs_estimator_step_3.h>
 #include <CGAL/Lod_2/Level_of_detail_walls_estimator_step_4.h>
+#include <CGAL/Lod_2/Level_of_detail_coplanar_walls_detector_step_5.h>
+#include <CGAL/Lod_2/Level_of_detail_coplanar_walls_merger_step_6.h>
+#include <CGAL/Lod_2/Level_of_detail_kinetic_partition_input_creator_step_7.h>
+#include <CGAL/Lod_2/Level_of_detail_kinetic_partition_output_creator_step_8.h>
 
 namespace CGAL {
 
@@ -163,9 +167,6 @@ namespace CGAL {
 			typedef CGAL::LOD::Level_of_detail_building_partition_input<Kernel, Container_3D, Buildings, Input_strategy> Partition_input;
 			typedef CGAL::LOD::Level_of_detail_building_partition_creator<Kernel, Container_3D, Buildings, Building> 	 Partition_creator;
 
-			typedef CGAL::LOD::Level_of_detail_building_kinetic_partition_input_creator<Kernel, Container_3D, Building, Buildings>  Kinetic_partition_input_creator;
-			typedef CGAL::LOD::Level_of_detail_building_kinetic_partition_output_creator<Kernel, Building, Buildings> 				Kinetic_partition_output_creator;
-
 			typedef CGAL::LOD::Level_of_detail_lod2<Kernel, Building, Buildings, Mesh> 		     		 LOD2_reconstruction;
 			typedef CGAL::LOD::Level_of_detail_lod2_from_kinetic<Kernel, CDT, Building, Buildings, Mesh> Kinetic_LOD2_reconstruction;
 
@@ -186,6 +187,10 @@ namespace CGAL {
 			typedef CGAL::LOD::Level_of_detail_cleaner_step_2<Kernel, Container_3D, CDT, Buildings> 		  		  Roof_cleaner;
 			typedef CGAL::LOD::Level_of_detail_roofs_estimator_step_3<Kernel, Container_3D, Building, Buildings> 	  Initial_roofs_estimator;
 			typedef CGAL::LOD::Level_of_detail_walls_estimator_step_4<Kernel, Building, Buildings> 	  				  Initial_walls_estimator;
+			typedef CGAL::LOD::Level_of_detail_coplanar_walls_detector_step_5<Kernel, Building, Buildings> 	  		  Coplanar_walls_detector;
+			typedef CGAL::LOD::Level_of_detail_coplanar_walls_merger_step_6<Kernel, Building, Buildings> 	  		  Coplanar_walls_merger;
+			typedef CGAL::LOD::Level_of_detail_kinetic_partition_input_creator_step_7<Kernel, Building, Buildings>    Kinetic_partition_input_creator;
+			typedef CGAL::LOD::Level_of_detail_kinetic_partition_output_creator_step_8<Kernel, Building, Buildings>   Kinetic_partition_output_creator;
 		};
 	}
 }

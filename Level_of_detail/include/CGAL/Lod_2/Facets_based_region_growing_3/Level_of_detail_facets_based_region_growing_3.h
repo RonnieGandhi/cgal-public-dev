@@ -1,11 +1,5 @@
-#ifndef CGAL_LEVEL_OF_DETAIL_FACETS_BASED_REGION_GROWING_H
-#define CGAL_LEVEL_OF_DETAIL_FACETS_BASED_REGION_GROWING_H
-
-#if defined(WIN32) || defined(_WIN32) 
-#define PSR "\\" 
-#else 
-#define PSR "/" 
-#endif
+#ifndef CGAL_LEVEL_OF_DETAIL_FACETS_BASED_REGION_GROWING_3_H
+#define CGAL_LEVEL_OF_DETAIL_FACETS_BASED_REGION_GROWING_3_H
 
 // STL includes.
 #include <map>
@@ -18,18 +12,12 @@
 #include <stdlib.h>
 #include <algorithm>
 
-// CGAL includes.
-#include <CGAL/IO/Color.h>
-
-// New CGAL includes.
-#include <CGAL/Mylog/Mylog.h>
-
 namespace CGAL {
 
 	namespace LOD {
 
 		template<class InputKernel>
-		class Level_of_detail_facets_based_region_growing {
+		class Level_of_detail_facets_based_region_growing_3 {
 
 		public:
 			using Kernel = InputKernel;
@@ -38,19 +26,14 @@ namespace CGAL {
 			using Point_3  = typename Kernel::Point_3;
 			using Vector_3 = typename Kernel::Vector_3;
 
-			using Color = CGAL::Color;
-
 			using Region_facet   = std::vector<Point_3>;
             using Region_facets  = std::vector<Region_facet>;
 			using Output_regions = std::vector<Region_facets>;
-			using Output_colors  = std::vector<Color>;
 			
-			using Input_facet  = std::pair<Region_facet, Color>;
+			using Input_facet  = Region_facet;
 			using Input_facets = std::vector<Input_facet>;
 
 			Input_facets input_facets;
-
-			using Log = CGAL::LOD::Mylog;
 
 			using Region  = std::vector<size_t>;
 			using Regions = std::vector<Region>;
@@ -62,7 +45,7 @@ namespace CGAL {
 
 			using Queue = std::queue<size_t>;
 
-			Level_of_detail_facets_based_region_growing(const Input_facets &input_facets) : 
+			Level_of_detail_facets_based_region_growing_3(const Input_facets &input_facets) : 
 			m_input_facets(input_facets),
 			m_no_rg(false),
 			m_tolerance(FT(1) / FT(100000)) { 
@@ -77,11 +60,7 @@ namespace CGAL {
 
 				Regions regions;
 				grow_regions(regions);
-
-				Output_colors output_colors;
-				create_output_regions(regions, output_regions, output_colors);
-
-				print_output_regions(output_regions, output_colors);
+				create_output_regions(regions, output_regions);
 			}
 
 		private:
@@ -109,22 +88,17 @@ namespace CGAL {
 				}
 			}
 
-			void create_output_regions(const Regions &regions, Output_regions &output_regions, Output_colors &output_colors) const {
+			void create_output_regions(const Regions &regions, Output_regions &output_regions) const {
 				
 				output_regions.clear();
 				output_regions.resize(regions.size());
 
-				output_colors.clear();
-				output_colors.resize(regions.size());
-
 				for (size_t i = 0; i < regions.size(); ++i) {
-					
 					output_regions[i].resize(regions[i].size());
-					output_colors[i] = generate_random_color();
 
-					for (size_t j = 0; j < regions[i].size(); ++j) {
-						
+					for (size_t j = 0; j < regions[i].size(); ++j) {						
 						const size_t index = regions[i][j];
+
 						create_output_facet(index, output_regions[i][j]);
 					}
 				}
@@ -133,25 +107,10 @@ namespace CGAL {
 			void create_output_facet(const size_t facet_index, Region_facet &region_facet) const {
 
 				region_facet.clear();
-				region_facet.resize(m_input_facets[facet_index].first.size());
+				region_facet.resize(m_input_facets[facet_index].size());
 
-				for (size_t i = 0; i < m_input_facets[facet_index].first.size(); ++i)
-					region_facet[i] = m_input_facets[facet_index].first[i];
-			}
-
-			void print_output_regions(const Output_regions &output_regions, const Output_colors &output_colors) const {
-
-				// Log log;
-				// log.print_rg_output_facets(output_regions, output_colors, "tmp" + std::string(PSR) + "lod_2" + std::string(PSR) + "6_region_growing");
-			}
-
-            Color generate_random_color() const {
-
-				const int r = rand() % 255;
-				const int g = rand() % 255;
-				const int b = rand() % 255;
-
-				return Color(r, g, b);
+				for (size_t i = 0; i < m_input_facets[facet_index].size(); ++i)
+					region_facet[i] = m_input_facets[facet_index][i];
 			}
 
 			void grow_all_regions(Regions &regions) const {
@@ -181,8 +140,6 @@ namespace CGAL {
 					
 					find_facet_neighbours(m_input_facets[i], i, neighbours);
 					connectivity[i] = neighbours;
-
-					// std::cout << m_input_facets[i].first.size() << " : " << neighbours.size() << std::endl;
 				}
 			}
 
@@ -196,17 +153,14 @@ namespace CGAL {
 
 			bool share_an_edge(const Input_facet &f1, const Input_facet &f2) const {
 
-				for (size_t i = 0; i < f1.first.size(); ++i) {
-					const size_t ip = (i + 1) % f1.first.size();
+				for (size_t i = 0; i < f1.size(); ++i) {
+					const size_t ip = (i + 1) % f1.size();
 
-					for (size_t j = 0; j < f2.first.size(); ++j) {
-						const size_t jp = (j + 1) % f2.first.size();
+					for (size_t j = 0; j < f2.size(); ++j) {
+						const size_t jp = (j + 1) % f2.size();
 
-						if (are_equal_edges(f1.first[i], f1.first[ip], f2.first[j], f2.first[jp])) 
+						if (are_equal_edges(f1[i], f1[ip], f2[j], f2[jp])) 
 							return true;
-
-						// if (are_equal_points(f1.first[i], f2.first[j]))
-						//     return true;
 					}
 				}
 				return false;
@@ -255,12 +209,6 @@ namespace CGAL {
 					for (size_t i = 0; i < neighbours.size(); ++i) {
 
 						const size_t neighbour_index = neighbours[i];
-						/* if (!states.at(neighbour_index) && m_input_facets[neighbour_index].first.size() == 3) {
-							
-							std::cout << m_input_facets[facet_index].first.size() << " : " << neighbours.size() << std::endl;
-							std::cout << "cond: " << satisfies_local_conditions(facet_index, neighbour_index) << std::endl;
-						} */
-
 						if (!states.at(neighbour_index) && satisfies_local_conditions(facet_index, neighbour_index)) {
 
 							queue.push(neighbour_index);
@@ -272,35 +220,8 @@ namespace CGAL {
 			}
 
 			bool satisfies_local_conditions(const size_t f1_index, const size_t f2_index) const {	
-				return /* are_within_angle_tolerance(f1_index, f2_index) && */ are_coplanar(f1_index, f2_index);
+				return are_coplanar(f1_index, f2_index);
 			}
-
-			/*
-			bool are_within_angle_tolerance(const size_t f1_index, const size_t f2_index) const {
-				
-				Vector_3 n1, n2;
-				get_normal(f1_index, n1);
-				get_normal(f2_index, n2);
-
-				const FT scalar = CGAL::scalar_product(n1, n2);
-				return (FT(1) - CGAL::abs(scalar)) < m_tolerance;
-			}
-
-			Vector_3 get_normal(const size_t facet_index, Vector_3 &normal) const {
-
-				const Input_facet &input_facet = m_input_facets[facet_index];
-				CGAL_precondition(input_facet.first.size() >= 3);
-
-				const Point_3 &p1 = input_facet.first[0];
-				const Point_3 &p2 = input_facet.first[1];
-				const Point_3 &p3 = input_facet.first[2];
-
-				const Vector_3 v1 = Vector_3(p1, p2);
-				const Vector_3 v2 = Vector_3(p1, p3);
-
-				const Vector_3 cross = CGAL::cross_product(v1, v2);
-				normal = cross / static_cast<FT>(CGAL::sqrt(CGAL::to_double(cross.squared_length())));
-			} */
 
 			bool are_coplanar(const size_t f1_index, const size_t f2_index) const {
 
@@ -308,15 +229,15 @@ namespace CGAL {
 				const Input_facet &v2 = m_input_facets[f2_index];
 
 				size_t count = 0;
-				for (size_t i = 0; i < v1.first.size(); ++i) {
+				for (size_t i = 0; i < v1.size(); ++i) {
 
-					const size_t ip  = (i + 1) % v1.first.size();
-					const size_t ipp = (i + 2) % v1.first.size();
+					const size_t ip  = (i + 1) % v1.size();
+					const size_t ipp = (i + 2) % v1.size();
 
-					for (size_t j = 0; j < v2.first.size(); ++j)
-						if (is_coplanar(v1.first[i], v1.first[ip], v1.first[ipp], v2.first[j])) ++count;
+					for (size_t j = 0; j < v2.size(); ++j)
+						if (is_coplanar(v1[i], v1[ip], v1[ipp], v2[j])) ++count;
 				}
-				return count == v1.first.size() * v2.first.size();
+				return count == v1.size() * v2.size();
 			}
 
 			bool is_coplanar(const Point_3 &p1, const Point_3 &p2, const Point_3 &p3, const Point_3 &p4) const {
@@ -336,4 +257,4 @@ namespace CGAL {
 
 } // CGAL
 
-#endif // CGAL_LEVEL_OF_DETAIL_FACETS_BASED_REGION_GROWING_H
+#endif // CGAL_LEVEL_OF_DETAIL_FACETS_BASED_REGION_GROWING_3_H

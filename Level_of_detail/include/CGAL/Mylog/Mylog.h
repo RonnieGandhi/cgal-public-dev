@@ -93,59 +93,76 @@ namespace CGAL {
 				return true;
 			}
 
-			template<class Output_regions, class Output_colors>
-			void print_rg_output_facets(const Output_regions &output_regions, const Output_colors &output_colors, const std::string file_name) {
+			template<class Buildings>
+			void save_facets_based_region_growing(const Buildings &buildings, const std::string filename) {
 
 				clear();
 
-				size_t num_faces    = 0;
-				size_t num_vertices = 0;
-
-				for (size_t i = 0; i < output_regions.size(); ++i) {
-					num_faces += output_regions[i].size();
-				
-					for (size_t j = 0; j < output_regions[i].size(); ++j)
-						num_vertices += output_regions[i][j].size();
+				size_t num_facets = 0, num_vertices = 0;
+				for (typename Buildings::const_iterator bit = buildings.begin(); bit != buildings.end(); ++bit) {
+					
+					const auto &output_regions = bit->second.output_regions;
+					for (size_t i = 0; i < output_regions.size(); ++i) {
+						
+						const auto &output_region = output_regions[i];
+						for (size_t j = 0; j < output_region.size(); ++j) {
+							
+							const auto &region_facet = output_region[j];
+							for (size_t k = 0; k < region_facet.size(); ++k) ++num_vertices;
+							++num_facets;
+						}
+					}
 				}
 
 				// Add ply header.
 				out << 
 				"ply" + std::string(PN) + ""               					    << 
 				"format ascii 1.0" + std::string(PN) + ""     				    << 
-				"element vertex "        				   << num_vertices  << "" + std::string(PN) + "" << 
+				"element vertex "        				   << num_vertices << "" + std::string(PN) + "" << 
 				"property double x" + std::string(PN) + ""    				    << 
 				"property double y" + std::string(PN) + ""    				    << 
 				"property double z" + std::string(PN) + "" 					    <<
-				"element face " 						   << num_faces     << "" + std::string(PN) + "" << 
+				"element face " 						   << num_facets   << "" + std::string(PN) + "" << 
 				"property list uchar int vertex_indices" + std::string(PN) + "" <<
 				"property uchar red"   + std::string(PN) + "" 				    <<
 				"property uchar green" + std::string(PN) + "" 				    <<
 				"property uchar blue"  + std::string(PN) + "" 				    <<
 				"end_header" + std::string(PN) + "";
 
-				// Add vertices.
-				for (size_t i = 0; i < output_regions.size(); ++i)
-					for (size_t j = 0; j < output_regions[i].size(); ++j)
-						for (size_t k = 0; k < output_regions[i][j].size(); ++k)
-							out << output_regions[i][j][k] << std::endl;
-
-				// Add faces.
-				size_t count = 0;
-				for (size_t i = 0; i < output_regions.size(); ++i) {
-					for (size_t j = 0; j < output_regions[i].size(); ++j) {
-
-						out << output_regions[i][j].size() << " ";
-						for (size_t k = 0; k < output_regions[i][j].size(); ++k) {
+				for (typename Buildings::const_iterator bit = buildings.begin(); bit != buildings.end(); ++bit) {
+					
+					const auto &output_regions = bit->second.output_regions;
+					for (size_t i = 0; i < output_regions.size(); ++i) {
+						
+						const auto &output_region = output_regions[i];
+						for (size_t j = 0; j < output_region.size(); ++j) {
 							
-							out << count << " "; 
-							++count;
+							const auto &region_facet = output_region[j];
+							for (size_t k = 0; k < region_facet.size(); ++k) out << region_facet[k] << std::endl;
 						}
-						out << output_colors[i] << std::endl;
 					}
 				}
 
-				// Save file.
-				save(file_name, ".ply");
+				size_t count = 0;
+				for (typename Buildings::const_iterator bit = buildings.begin(); bit != buildings.end(); ++bit) {
+
+					const auto &output_regions = bit->second.output_regions;
+					for (size_t i = 0; i < output_regions.size(); ++i) {
+
+						const Color color = generate_random_color();
+						
+						const auto &output_region = output_regions[i];
+						for (size_t j = 0; j < output_region.size(); ++j) {
+							
+							const auto &region_facet = output_region[j];
+							out << region_facet.size() << " ";
+							
+							for (size_t k = 0; k < region_facet.size(); ++k) out << count++ << " ";
+							out << color << std::endl;
+						}
+					}
+				}
+				save(filename, ".ply");
 			}
 
 			template<class Bounding_boxes, class Point_3>
@@ -542,6 +559,75 @@ namespace CGAL {
 			template<class Buildings>
 			void save_building_walls(const Buildings &buildings, const std::string &filename, const bool use_random_color = false) {
 
+				clear();
+
+				size_t num_facets = 0, num_vertices = 0;
+				for (typename Buildings::const_iterator bit = buildings.begin(); bit != buildings.end(); ++bit) {
+					
+					const auto &walls = bit->second.walls;
+					for (size_t i = 0; i < walls.size(); ++i) {
+						
+						const auto &boundary = walls[i].boundary;
+						if (boundary.size() == 0) continue;
+						
+						for (size_t j = 0; j < boundary.size(); ++j) {
+							
+							const auto &p = boundary[j];							
+							++num_vertices;
+						}
+						++num_facets;
+					}
+				}
+
+				// Add ply header.
+				out << 
+				"ply" + std::string(PN) + ""               					    << 
+				"format ascii 1.0" + std::string(PN) + ""     				    << 
+				"element vertex "        				   << num_vertices << "" + std::string(PN) + "" << 
+				"property double x" + std::string(PN) + ""    				    << 
+				"property double y" + std::string(PN) + ""    				    << 
+				"property double z" + std::string(PN) + "" 					    <<
+				"element face " 						   << num_facets   << "" + std::string(PN) + "" << 
+				"property list uchar int vertex_indices" + std::string(PN) + "" <<
+				"property uchar red"   + std::string(PN) + "" 				    <<
+				"property uchar green" + std::string(PN) + "" 				    <<
+				"property uchar blue"  + std::string(PN) + "" 				    <<
+				"end_header" + std::string(PN) + "";
+
+				for (typename Buildings::const_iterator bit = buildings.begin(); bit != buildings.end(); ++bit) {
+					const auto &walls = bit->second.walls;
+
+					for (size_t i = 0; i < walls.size(); ++i) {
+						const auto &boundary = walls[i].boundary;
+
+						if (boundary.size() == 0) continue;
+
+						for (size_t j = 0; j < boundary.size(); ++j) {
+							const auto &p = boundary[j];
+							out << p << std::endl;
+						}
+					}
+				}
+
+				size_t count = 0;
+				for (typename Buildings::const_iterator bit = buildings.begin(); bit != buildings.end(); ++bit) {
+					const auto &walls = bit->second.walls;
+
+					for (size_t i = 0; i < walls.size(); ++i) {
+						const auto &boundary = walls[i].boundary;
+						
+						if (boundary.size() == 0) continue;
+
+						out << boundary.size() << " ";
+						for (size_t j = 0; j < boundary.size(); ++j) {
+							const auto &p = boundary[j];
+							out << count++ << " ";
+						}
+						if (!use_random_color) out << bit->second.color << std::endl;
+						else out << generate_random_color() << std::endl;
+					}
+				}
+				save(filename, ".ply");
 			}
 
 			template<class Buildings>

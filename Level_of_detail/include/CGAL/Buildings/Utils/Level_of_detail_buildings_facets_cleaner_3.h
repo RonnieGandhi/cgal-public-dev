@@ -12,7 +12,8 @@
 // New CGAL includes.
 #include <CGAL/Buildings/Utils/Level_of_detail_local_mesh_builder.h>
 #include <CGAL/Region_growing/Level_of_detail_planar_region_growing.h>
-#include <CGAL/Region_growing/Level_of_detail_facets_based_region_growing.h>
+#include <CGAL/Lod_2/Facet_regions_merger_3/Level_of_detail_facet_regions_merger_3.h>
+#include <CGAL/Lod_2/Facets_based_region_growing_3/Level_of_detail_facets_based_region_growing_3.h>
 
 namespace CGAL {
 
@@ -59,8 +60,8 @@ namespace CGAL {
             using Clean_region   = std::vector<Clean_boundary>;
             using Clean_regions  = std::vector<Clean_region>;
 
-            using Planar_region_merger        = CGAL::LOD::Level_of_detail_planar_region_merger<Kernel, Building>;
-            using Facets_based_region_growing = CGAL::LOD::Level_of_detail_facets_based_region_growing<Kernel>;
+            using Planar_region_merger        = CGAL::LOD::Level_of_detail_facet_regions_merger_3<Kernel, Building>;
+            using Facets_based_region_growing = CGAL::LOD::Level_of_detail_facets_based_region_growing_3<Kernel>;
 
             Level_of_detail_buildings_facets_cleaner_3(Buildings &buildings) :
             m_buildings(buildings),

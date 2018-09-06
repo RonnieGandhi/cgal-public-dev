@@ -143,6 +143,8 @@ namespace CGAL {
 
 			typedef typename Traits::Initial_roofs_estimator Initial_roofs_estimator;
 			typedef typename Traits::Initial_walls_estimator Initial_walls_estimator;
+			typedef typename Traits::Coplanar_walls_detector Coplanar_walls_detector;
+			typedef typename Traits::Coplanar_walls_merger   Coplanar_walls_merger;
 
 
 			// Extra typedefs.
@@ -1357,12 +1359,12 @@ namespace CGAL {
 				}
 			}
 
-			void estimating_kinetic_input_walls(Buildings &buildings, const size_t exec_step) {
+			void estimating_kinetic_input_walls(const FT ground_height, Buildings &buildings, const size_t exec_step) {
 				
 				// Estimate input walls.
 				std::cout << "(" << exec_step << ") estimating kinetic input walls;" << std::endl;
 
-				Initial_walls_estimator initial_walls_estimator = Initial_walls_estimator(buildings);
+				Initial_walls_estimator initial_walls_estimator = Initial_walls_estimator(ground_height, buildings);
 				initial_walls_estimator.estimate();
 
 				if (!m_silent) {
@@ -1370,39 +1372,66 @@ namespace CGAL {
 				}
 			}
 
+			void searching_for_coplanar_input_walls(Buildings &buildings, const size_t exec_step) {
+				
+				// Find coplanar input walls.
+				std::cout << "(" << exec_step << ") searching for coplanar input walls;" << std::endl;
 
-			// not yet handled -->
+				Coplanar_walls_detector coplanar_walls_detector = Coplanar_walls_detector(buildings);
+				coplanar_walls_detector.detect();
 
-			void creating_3d_partitioning_input(const Container_3D &input, const FT ground_height, Buildings &buildings, const size_t exec_step) {
+				if (!m_silent) {
+					Log exporter; exporter.save_facets_based_region_growing(buildings, "tmp" + std::string(PSR) + "lod_2" + std::string(PSR) + "5_coplanar_walls");
+				}
+			}
+
+			void merging_coplanar_input_walls(Buildings &buildings, const size_t exec_step) {
+				
+				// Merge coplanar input walls.
+				std::cout << "(" << exec_step << ") merging coplanar input walls;" << std::endl;
+
+				Coplanar_walls_merger coplanar_walls_merger = Coplanar_walls_merger(buildings);
+				coplanar_walls_merger.merge();
+
+				if (!m_silent) {
+					Log exporter; exporter.save_building_walls(buildings, "tmp" + std::string(PSR) + "lod_2" + std::string(PSR) + "6_merged_walls", true);
+				}
+			}
+
+			void creating_3d_partitioning_input(const FT ground_height, Buildings &buildings, const size_t exec_step) {
 				
 				// Create 3D partitioning input.
 				std::cout << "(" << exec_step << ") creating 3D partitioning input;" << std::endl;
-				m_kinetic_partition_input_creator = std::make_shared<Kinetic_partition_input_creator>(input, ground_height, buildings);
+
+				m_kinetic_partition_input_creator = std::make_shared<Kinetic_partition_input_creator>(ground_height, buildings);
 
 				m_kinetic_partition_input_creator->scale(m_kinetic_3d_scale);
 				m_kinetic_partition_input_creator->perturb_vertices(m_kinetic_3d_perturb_vertices);
 				m_kinetic_partition_input_creator->perturb_support_plane(m_kinetic_3d_perturb_support_plane);
-				m_kinetic_partition_input_creator->merge_walls(m_kinetic_3d_merge_walls);
-				m_kinetic_partition_input_creator->set_area_tolerance(m_kinetic_3d_tolerance);
 
 				m_kinetic_partition_input_creator->create();
+
 				if (!m_silent) {
-					Log exporter; exporter.save_convex_polygons(buildings, "tmp" + std::string(PSR) + "lod_2" + std::string(PSR) + "3_kinetic_partitioning_input");
+					Log exporter; exporter.save_convex_polygons(buildings, "tmp" + std::string(PSR) + "lod_2" + std::string(PSR) + "7_kinetic_partitioning_input");
 				}
 			}
 
 			void creating_3d_partitioning_output(Buildings &buildings, const size_t exec_step) {
 				
-				// Apply 3D partitioning and get a set of filtered 3D faces.
+				// Apply 3D partitioning.
 				std::cout << "(" << exec_step << ") creating 3D partitioning output;" << std::endl;
 				
 				m_kinetic_partition_output_creator = std::make_shared<Kinetic_partition_output_creator>(buildings);
 				m_kinetic_partition_output_creator->create();
 
 				if (!m_silent) {
-					Log exporter; exporter.save_polyhedrons(buildings, "tmp" + std::string(PSR) + "lod_2" + std::string(PSR) + "4_kinetic_partitioning_polyhedrons");
+					Log exporter; exporter.save_polyhedrons(buildings, "tmp" + std::string(PSR) + "lod_2" + std::string(PSR) + "8_kinetic_partitioning_polyhedrons");
 				}
 			}
+
+
+
+			// not yet handled -->
 
 			void creating_roofs(const Container_3D &input, const FT ground_height, Buildings &buildings, const size_t exec_step) {
 
@@ -1648,32 +1677,40 @@ namespace CGAL {
 				std::cout << std::endl << "...CREATING LOD2..." << std::endl << std::endl;
 
 				
-				// (01) ----------------------------------
+				// (00) ----------------------------------
 				adding_3d_points_inside_buildings(input, cdt, building_interior_idxs, buildings, "interior", ++exec_step);
 				
 
-				// (02) ----------------------------------
+				// (01) ----------------------------------
 				applying_3d_region_growing_on_points(input, buildings, ++exec_step);
 
 
-				// (03) ----------------------------------
+				// (02) ----------------------------------
 				cleaning_3d_point_regions(input, ground_height, buildings, ++exec_step);
 
 
-				// (04) ----------------------------------
+				// (03) ----------------------------------
 				estimating_kinetic_input_roofs(input, buildings, ++exec_step);
 
 
-				// (05) ----------------------------------
-				estimating_kinetic_input_walls(buildings, ++exec_step);
-
-
 				// (04) ----------------------------------
-				// creating_3d_partitioning_input(input, ground_height, buildings, ++exec_step);
+				estimating_kinetic_input_walls(ground_height, buildings, ++exec_step);
 
 
 				// (05) ----------------------------------
-				// creating_3d_partitioning_output(buildings, ++exec_step);
+				searching_for_coplanar_input_walls(buildings, ++exec_step);
+
+				
+				// (06) ----------------------------------
+				merging_coplanar_input_walls(buildings, ++exec_step);
+
+
+				// (07) ----------------------------------
+				creating_3d_partitioning_input(ground_height, buildings, ++exec_step);
+
+
+				// (08) ----------------------------------
+				creating_3d_partitioning_output(buildings, ++exec_step);
 
 
 				// (06) ----------------------------------
