@@ -200,5 +200,7 @@
 <g style="fill:rgb(54.5%,0%,0%);fill-opacity:1;">
   <use xlink:href="#glyph8-3" x="107.544469" y="18.717808"/>
 </g>
+<path style="fill:none;stroke-width:0.4;stroke-linecap:butt;stroke-linejoin:round;stroke:rgb(0%,0%,100%);stroke-opacity:1;stroke-miterlimit:10;" d="M 259.64502 594.429993 C 268.844239 592.804993 278.004395 597.492493 282.066895 605.906555 C 286.133301 614.316711 284.109864 624.406555 277.121583 630.601868 C 270.133301 636.801086 259.875489 637.601868 252.008301 632.558899 C 244.141114 627.519836 240.586426 617.867493 243.297364 608.926086 " transform="matrix(1,0,0,-1,-146.855958,680.137024)"/>
+<path style="fill-rule:evenodd;fill:rgb(0%,0%,100%);fill-opacity:1;stroke-width:0.4;stroke-linecap:butt;stroke-linejoin:round;stroke:rgb(0%,0%,100%);stroke-opacity:1;stroke-miterlimit:10;" d="M 240.273926 615.20343 C 240.922364 612.957336 241.945801 610.836243 243.297364 608.926086 C 243.359864 611.262024 243.816895 613.574524 244.64502 615.762024 Z M 240.273926 615.20343 " transform="matrix(1,0,0,-1,-146.855958,680.137024)"/>
 </g>
 </svg>
