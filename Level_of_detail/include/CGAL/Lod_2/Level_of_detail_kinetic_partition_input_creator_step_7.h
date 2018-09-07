@@ -72,7 +72,7 @@ namespace CGAL {
             m_ground_height(ground_height),
             m_buildings(buildings),
             m_big_value(FT(100000000000000)),
-            m_z_scale(FT(3)),
+            m_z_scale(FT(10)),
             m_up_scale(FT(3) / FT(2)),
             m_down_scale(FT(1) / FT(2)),
             m_disc_scale(FT(1) / FT(10)),

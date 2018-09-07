@@ -60,6 +60,7 @@
 #include <CGAL/Lod_2/Level_of_detail_coplanar_walls_merger_step_6.h>
 #include <CGAL/Lod_2/Level_of_detail_kinetic_partition_input_creator_step_7.h>
 #include <CGAL/Lod_2/Level_of_detail_kinetic_partition_output_creator_step_8.h>
+#include <CGAL/Lod_2/Level_of_detail_in_out_polyhedron_estimator_step_9.h>
 
 namespace CGAL {
 
@@ -182,15 +183,16 @@ namespace CGAL {
 			typedef CGAL::LOD::Level_of_detail_graphcut_3<Kernel, Container_3D, Building, Buildings> Graphcut_3;
 
 			// LOD 2 -->
-			typedef CGAL::LOD::Level_of_detail_inside_buildings_selector_step_0<Kernel, Container_3D, CDT, Buildings> Inside_buildings_selector;
-			typedef CGAL::LOD::Level_of_detail_region_growing_step_1<Kernel, Container_3D, CDT, Buildings> 		  	  Region_growing_3;
-			typedef CGAL::LOD::Level_of_detail_cleaner_step_2<Kernel, Container_3D, CDT, Buildings> 		  		  Roof_cleaner;
-			typedef CGAL::LOD::Level_of_detail_roofs_estimator_step_3<Kernel, Container_3D, Building, Buildings> 	  Initial_roofs_estimator;
-			typedef CGAL::LOD::Level_of_detail_walls_estimator_step_4<Kernel, Building, Buildings> 	  				  Initial_walls_estimator;
-			typedef CGAL::LOD::Level_of_detail_coplanar_walls_detector_step_5<Kernel, Building, Buildings> 	  		  Coplanar_walls_detector;
-			typedef CGAL::LOD::Level_of_detail_coplanar_walls_merger_step_6<Kernel, Building, Buildings> 	  		  Coplanar_walls_merger;
-			typedef CGAL::LOD::Level_of_detail_kinetic_partition_input_creator_step_7<Kernel, Building, Buildings>    Kinetic_partition_input_creator;
-			typedef CGAL::LOD::Level_of_detail_kinetic_partition_output_creator_step_8<Kernel, Building, Buildings>   Kinetic_partition_output_creator;
+			typedef CGAL::LOD::Level_of_detail_inside_buildings_selector_step_0<Kernel, Container_3D, CDT, Buildings> 		 Inside_buildings_selector;
+			typedef CGAL::LOD::Level_of_detail_region_growing_step_1<Kernel, Container_3D, CDT, Buildings> 		  	  		 Region_growing_3;
+			typedef CGAL::LOD::Level_of_detail_cleaner_step_2<Kernel, Container_3D, CDT, Buildings> 		  		  		 Roof_cleaner;
+			typedef CGAL::LOD::Level_of_detail_roofs_estimator_step_3<Kernel, Container_3D, Building, Buildings> 	  		 Initial_roofs_estimator;
+			typedef CGAL::LOD::Level_of_detail_walls_estimator_step_4<Kernel, Building, Buildings> 	  				  		 Initial_walls_estimator;
+			typedef CGAL::LOD::Level_of_detail_coplanar_walls_detector_step_5<Kernel, Building, Buildings> 	  		  		 Coplanar_walls_detector;
+			typedef CGAL::LOD::Level_of_detail_coplanar_walls_merger_step_6<Kernel, Building, Buildings> 	  		  		 Coplanar_walls_merger;
+			typedef CGAL::LOD::Level_of_detail_kinetic_partition_input_creator_step_7<Kernel, Building, Buildings>    		 Kinetic_partition_input_creator;
+			typedef CGAL::LOD::Level_of_detail_kinetic_partition_output_creator_step_8<Kernel, Building, Buildings>   		 Kinetic_partition_output_creator;
+			typedef CGAL::LOD::Level_of_detail_in_out_polyhedron_estimator_step_9<Kernel, Container_3D, Building, Buildings> In_out_polyhedron_estimator;
 		};
 	}
 }

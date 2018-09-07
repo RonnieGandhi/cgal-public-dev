@@ -7,11 +7,12 @@
 // CGAL includes.
 #include <CGAL/utils.h>
 #include <CGAL/number_utils.h>
-#include <CGAL/Simple_cartesian.h>
+#include <CGAL/linear_least_squares_fitting_3.h>
+#include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 
 // New CGAL includes.
-#include <CGAL/Lod_2/Roofs_estimator/Level_of_detail_roofs_diagonalize_traits.h>
 #include <CGAL/Lod_2/Roofs_estimator/Level_of_detail_roofs_estimator_box_strategy.h>
+#include <CGAL/Lod_2/Roofs_estimator/Level_of_detail_roofs_eigen_diagonalize_traits.h>
 
 namespace CGAL {
 
@@ -38,13 +39,15 @@ namespace CGAL {
             
             using Points_3 = std::vector<Point_3>;
 
-            using Local_kernel       = CGAL::Simple_cartesian<double>;
-            using Diagonalize_traits = CGAL::LOD::Eigen_roofs_diagonalize_traits<double, 3>;
+            using Local_kernel = CGAL::Exact_predicates_inexact_constructions_kernel;
 
-			using Point_3ft = typename Local_kernel::Point_3;
-            using Plane_3ft = typename Local_kernel::Plane_3;
+			using Local_ft      = typename Local_kernel::FT;
+            using Local_point_3 = typename Local_kernel::Point_3;
+            using Local_plane_3 = typename Local_kernel::Plane_3;
 
-            using Points_3ft = std::vector<Point_3ft>;
+            using Diagonalize_traits = CGAL::LOD::Roofs_eigen_diagonalize_traits<Local_ft, 3>;
+
+            using Local_points_3 = std::vector<Local_point_3>;
 
             using Roof_estimation_strategy = CGAL::LOD::Level_of_detail_roofs_estimator_box_strategy<Kernel, Input, Building>;
 
@@ -106,42 +109,42 @@ namespace CGAL {
 
             void fit_plane_to_roof_points(const Indices &indices, Plane_3 &plane) const {
                 
-                Point_3ft centroid;
-                Points_3ft points;
+                Local_point_3  centroid;
+                Local_points_3 points;
                 set_points_and_centroid(indices, points, centroid);
 
-                Plane_3ft tmp_plane;
+                Local_plane_3 tmp_plane;
 				CGAL::linear_least_squares_fitting_3(points.begin(), points.end(), tmp_plane, centroid, CGAL::Dimension_tag<0>(), Local_kernel(), Diagonalize_traits());
 				plane = Plane_3(static_cast<FT>(tmp_plane.a()), static_cast<FT>(tmp_plane.b()), static_cast<FT>(tmp_plane.c()), static_cast<FT>(tmp_plane.d()));
             }
 
-            void set_points_and_centroid(const Indices &indices, Points_3ft &points, Point_3ft &centroid) const {
+            void set_points_and_centroid(const Indices &indices, Local_points_3 &points, Local_point_3 &centroid) const {
                 CGAL_precondition(indices.size() > 2);
 
                 points.clear();
                 points.resize(indices.size());
 
-                double bx = 0.0, by = 0.0, bz = 0.0;
+                Local_ft cx = Local_ft(0), cy = Local_ft(0), cz = Local_ft(0);
 				for (size_t i = 0; i < indices.size(); ++i) {
 
 					const Point_3 &p = m_input.point(indices[i]);
 
-					const double x = CGAL::to_double(p.x());
-					const double y = CGAL::to_double(p.y());
-					const double z = CGAL::to_double(p.z());
+					const Local_ft x = static_cast<Local_ft>(CGAL::to_double(p.x()));
+					const Local_ft y = static_cast<Local_ft>(CGAL::to_double(p.y()));
+					const Local_ft z = static_cast<Local_ft>(CGAL::to_double(p.z()));
 
-					points[i] = Point_3ft(x, y, z);
+					points[i] = Local_point_3(x, y, z);
 
-                    bx += x;
-                    by += y;
-                    bz += z;
+                    cx += x;
+                    cy += y;
+                    cz += z;
 				}
 
-                bx /= static_cast<double>(indices.size());
-                by /= static_cast<double>(indices.size());
-                bz /= static_cast<double>(indices.size());
+                cx /= static_cast<Local_ft>(indices.size());
+                cy /= static_cast<Local_ft>(indices.size());
+                cz /= static_cast<Local_ft>(indices.size());
 
-                centroid = Point_3ft(bx, by, bz);
+                centroid = Local_point_3(cx, cy, cz);
             }
 
             void project_points_onto_plane(const Indices &indices, const Plane_3 &plane, Points_3 &points) const {
@@ -157,7 +160,9 @@ namespace CGAL {
                 }
             }
         };
-    }
-}
+
+    } // LOD
+
+} // CGAL
 
 #endif // CGAL_LEVEL_OF_DETAIL_ROOFS_ESTIMATOR_STEP_3_H

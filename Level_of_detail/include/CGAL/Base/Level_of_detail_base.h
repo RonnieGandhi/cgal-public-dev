@@ -141,10 +141,11 @@ namespace CGAL {
 			typedef typename Traits::Roofs_creator Roofs_creator;
 			typedef typename Traits::Graphcut_3    Graphcut_3;
 
-			typedef typename Traits::Initial_roofs_estimator Initial_roofs_estimator;
-			typedef typename Traits::Initial_walls_estimator Initial_walls_estimator;
-			typedef typename Traits::Coplanar_walls_detector Coplanar_walls_detector;
-			typedef typename Traits::Coplanar_walls_merger   Coplanar_walls_merger;
+			typedef typename Traits::Initial_roofs_estimator 	 Initial_roofs_estimator;
+			typedef typename Traits::Initial_walls_estimator 	 Initial_walls_estimator;
+			typedef typename Traits::Coplanar_walls_detector 	 Coplanar_walls_detector;
+			typedef typename Traits::Coplanar_walls_merger   	 Coplanar_walls_merger;
+			typedef typename Traits::In_out_polyhedron_estimator In_out_polyhedron_estimator;
 
 
 			// Extra typedefs.
@@ -1429,6 +1430,20 @@ namespace CGAL {
 				}
 			}
 
+			void estimating_in_out_polyhedron_labels(const Container_3D &input, const FT ground_height, Buildings &buildings, const size_t exec_step) {
+
+				// Estimate in/out polyhedron labels.
+				std::cout << "(" << exec_step << ") estimating in/out polyhedron labels;" << std::endl;
+
+				In_out_polyhedron_estimator in_out_polyhedron_estimator = In_out_polyhedron_estimator(input, ground_height, buildings);
+				in_out_polyhedron_estimator.estimate();
+
+				if (!m_silent) {
+					
+					Log exporter;
+					exporter.save_polyhedrons(buildings, "tmp" + std::string(PSR) + "lod_2" + std::string(PSR) + "9_in_out_estimation");
+				}
+			}
 
 
 			// not yet handled -->
@@ -1711,6 +1726,10 @@ namespace CGAL {
 
 				// (08) ----------------------------------
 				creating_3d_partitioning_output(buildings, ++exec_step);
+
+
+				// (09) ----------------------------------
+				estimating_in_out_polyhedron_labels(input, ground_height, buildings, ++exec_step);
 
 
 				// (06) ----------------------------------

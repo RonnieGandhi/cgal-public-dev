@@ -17,8 +17,8 @@
 //
 // Author(s) : Jocelyn Meyron and Quentin Mérigot
 
-#ifndef CGAL_LEVEL_OF_DETAIL_ROOFS_DIAGONALIZE_TRAITS_H
-#define CGAL_LEVEL_OF_DETAIL_ROOFS_DIAGONALIZE_TRAITS_H
+#ifndef CGAL_LEVEL_OF_DETAIL_ROOFS_EIGEN_DIAGONALIZE_TRAITS_H
+#define CGAL_LEVEL_OF_DETAIL_ROOFS_EIGEN_DIAGONALIZE_TRAITS_H
 
 #include <eigen3/Eigen/Dense>
 #include <eigen3/Eigen/Eigenvalues>
@@ -45,7 +45,7 @@ namespace LOD
 /// \cgalModels `DiagonalizeTraits`
 
 template <typename FT, unsigned int dim = 3>
-class Eigen_roofs_diagonalize_traits
+class Roofs_eigen_diagonalize_traits
 {
 
 public:
@@ -174,8 +174,8 @@ public:
   }
 };
 
-} // namespace LOD
+} // LOD
 
-} // namespace CGAL
+} // CGAL
 
-#endif // CGAL_LEVEL_OF_DETAIL_ROOFS_DIAGONALIZE_TRAITS_H
+#endif // CGAL_LEVEL_OF_DETAIL_ROOFS_EIGEN_DIAGONALIZE_TRAITS_H
