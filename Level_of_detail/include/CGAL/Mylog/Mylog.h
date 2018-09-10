@@ -94,6 +94,90 @@ namespace CGAL {
 			}
 
 			template<class Buildings>
+			void save_graphcut_facets(const Buildings &buildings, const std::string file_name) {
+				
+				clear();
+
+				size_t num_vertices = 0;
+				size_t num_facets	= 0;
+
+				for (auto bit = buildings.begin(); bit != buildings.end(); ++bit) {
+					
+					const auto &building = bit->second;
+					if (!building.is_valid) continue;
+
+					const auto 		&facets = building.graphcut_facets;
+					const auto &polyhedrons = building.polyhedrons;
+
+					for (size_t i = 0; i < facets.size(); ++i) {
+
+						num_vertices += polyhedrons[facets[i].data.first].facets[facets[i].data.second].indices.size();
+						num_facets   += 1; 
+					}
+				}
+
+				out << 
+				"ply" + std::string(PN) + ""               					     << 
+				"format ascii 1.0"  + std::string(PN) + ""     				     << 
+				"element vertex "        				   << num_vertices  << "" + std::string(PN) + "" << 
+				"property double x" + std::string(PN) + ""    				     << 
+				"property double y" + std::string(PN) + ""    				     << 
+				"property double z" + std::string(PN) + "" 					     <<
+				"element face " 						   << num_facets    << "" + std::string(PN) + "" << 
+				"property list uchar int vertex_indices" + std::string(PN) + ""  <<
+				"property uchar red"   + std::string(PN) + "" 				     <<
+				"property uchar green" + std::string(PN) + "" 				     <<
+				"property uchar blue"  + std::string(PN) + "" 				     <<
+				"end_header" + std::string(PN) + "";
+
+				for (auto bit = buildings.begin(); bit != buildings.end(); ++bit) {
+					
+					const auto &building = bit->second;
+					if (!building.is_valid) continue;
+
+					const auto 		&facets = building.graphcut_facets;
+					const auto &polyhedrons = building.polyhedrons;
+
+					for (size_t i = 0; i < facets.size(); ++i) {
+
+						const size_t n = polyhedrons[facets[i].data.first].facets[facets[i].data.second].indices.size();
+						for (size_t j = 0; j < n; ++j) {
+						
+							const size_t index = polyhedrons[facets[i].data.first].facets[facets[i].data.second].indices[j];
+							out << polyhedrons[facets[i].data.first].vertices[index] << std::endl;
+						}
+					}
+				}
+
+				size_t count = 0;
+				for (auto bit = buildings.begin(); bit != buildings.end(); ++bit) {
+					
+					const auto &building = bit->second;
+					if (!building.is_valid) continue;
+
+					const auto 		&facets = building.graphcut_facets;
+					const auto &polyhedrons = building.polyhedrons;
+
+					for (size_t i = 0; i < facets.size(); ++i) {
+						const Color color = generate_random_color();
+
+						const size_t n = polyhedrons[facets[i].data.first].facets[facets[i].data.second].indices.size();
+						out << n << " ";
+
+						for (size_t j = 0; j < n; ++j) out << count++ << " ";
+						out << color << std::endl;
+					}
+				}
+
+				save(file_name, ".ply");
+			}
+
+			template<class Buildings>
+			void save_clean_facets(const Buildings &buildings, const std::string filename) {
+				save_facets_based_region_growing(buildings, filename);
+			}
+
+			template<class Buildings>
 			void save_facets_based_region_growing(const Buildings &buildings, const std::string filename) {
 
 				clear();

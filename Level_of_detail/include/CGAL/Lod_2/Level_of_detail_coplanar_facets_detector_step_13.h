@@ -1,5 +1,5 @@
-#ifndef CGAL_LEVEL_OF_DETAIL_COPLANAR_WALLS_DETECTOR_STEP_5_H
-#define CGAL_LEVEL_OF_DETAIL_COPLANAR_WALLS_DETECTOR_STEP_5_H
+#ifndef CGAL_LEVEL_OF_DETAIL_COPLANAR_FACETS_DETECTOR_STEP_13_H
+#define CGAL_LEVEL_OF_DETAIL_COPLANAR_FACETS_DETECTOR_STEP_13_H
 
 // STL includes.
 #include <vector>
@@ -16,23 +16,20 @@ namespace CGAL {
 	namespace LOD {
 
 		template<class InputKernel, class InputBuilding, class InputBuildings>
-		class Level_of_detail_coplanar_walls_detector_step_5 {
+		class Level_of_detail_coplanar_facets_detector_step_13 {
             
         public:
             typedef InputKernel    Kernel;
             typedef InputBuilding  Building;
             typedef InputBuildings Buildings;
 
-            using Buildings_iterator = typename Buildings::iterator;
-
-            using Walls = typename Building::Walls;
-
+            using Buildings_iterator          = typename Buildings::iterator;
             using Facets_based_region_growing = CGAL::LOD::Level_of_detail_facets_based_region_growing_3<Kernel>;
             
-            using Input_facets   = typename Facets_based_region_growing::Input_facets;
+            using Input_facets   = typename Building::Clean_facets;
             using Output_regions = typename Facets_based_region_growing::Output_regions;
 			
-            Level_of_detail_coplanar_walls_detector_step_5(Buildings &buildings) :
+            Level_of_detail_coplanar_facets_detector_step_13(Buildings &buildings) :
             m_buildings(buildings)
             { }
 
@@ -54,23 +51,13 @@ namespace CGAL {
 
             void process_building(Building &building) const {
 
-                Walls &walls                   = building.walls;
-                Output_regions &output_regions = building.output_regions;
+                const Input_facets &input_facets = building.clean_facets;
+                Output_regions &output_regions   = building.output_regions;
                 
-                Input_facets input_facets;
-                create_input_facets(walls, input_facets);
+                if (input_facets.size() == 0) return;
 
                 Facets_based_region_growing region_growing(input_facets);
                 region_growing.create_regions(output_regions);
-            }
-
-            void create_input_facets(const Walls &walls, Input_facets &input_facets) const {
-                
-                input_facets.clear();
-                input_facets.resize(walls.size());
-
-                for (size_t i = 0; i < walls.size(); ++i)
-                    input_facets[i] = walls[i].boundary;
             }
         };
 
@@ -78,4 +65,4 @@ namespace CGAL {
 
 } // CGAL
 
-#endif // CGAL_LEVEL_OF_DETAIL_COPLANAR_WALLS_DETECTOR_STEP_5_H
+#endif // CGAL_LEVEL_OF_DETAIL_COPLANAR_FACETS_DETECTOR_STEP_13_H

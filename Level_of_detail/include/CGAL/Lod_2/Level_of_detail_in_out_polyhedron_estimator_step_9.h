@@ -88,7 +88,7 @@ namespace CGAL {
 				for (Buildings_iterator b_it = m_buildings.begin(); b_it != m_buildings.end(); ++b_it) {
                     Building &building = b_it->second;
 
-					if (building.is_valid && building.shapes.size() != 0 && building.jp_polygons.size() != 0) {
+					if (building.is_valid && building.interior_indices.size() != 0) {
 
                         compute_building_maximum_height(building);
                         process_building(building);
@@ -141,6 +141,8 @@ namespace CGAL {
 
                     polyhedron.in  = stats.first;
                     polyhedron.out = stats.second;
+
+                    polyhedron.weight = compute_weight(polyhedron);
 
                     if (polyhedron.in > FT(1) / FT(2)) polyhedron.is_valid = true;
                     else polyhedron.is_valid = false;
@@ -456,6 +458,10 @@ namespace CGAL {
                     }
                 }
                 return m_big_value;
+            }
+
+            FT compute_weight(const Polyhedron &polyhedron) const {
+                return FT(1);
             }
         };
 

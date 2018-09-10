@@ -135,17 +135,20 @@ namespace CGAL {
 
 			typedef typename Traits::Cdt_based_roofs_estimator Cdt_based_roofs_estimator;
 
-			typedef typename Traits::Visibility_3   Visibility_3;
-			typedef typename Traits::Facets_cleaner Facets_cleaner;
+			typedef typename Traits::Visibility_3 Visibility_3;
 
 			typedef typename Traits::Roofs_creator Roofs_creator;
 			typedef typename Traits::Graphcut_3    Graphcut_3;
 
-			typedef typename Traits::Initial_roofs_estimator 	 Initial_roofs_estimator;
-			typedef typename Traits::Initial_walls_estimator 	 Initial_walls_estimator;
-			typedef typename Traits::Coplanar_walls_detector 	 Coplanar_walls_detector;
-			typedef typename Traits::Coplanar_walls_merger   	 Coplanar_walls_merger;
-			typedef typename Traits::In_out_polyhedron_estimator In_out_polyhedron_estimator;
+			typedef typename Traits::Initial_roofs_estimator 	 			   Initial_roofs_estimator;
+			typedef typename Traits::Initial_walls_estimator 	 			   Initial_walls_estimator;
+			typedef typename Traits::Coplanar_walls_detector 	 			   Coplanar_walls_detector;
+			typedef typename Traits::Coplanar_walls_merger   	 			   Coplanar_walls_merger;
+			typedef typename Traits::In_out_polyhedron_estimator 			   In_out_polyhedron_estimator;
+			typedef typename Traits::Polyhedron_facet_weight_quality_estimator Polyhedron_facet_weight_quality_estimator;
+			typedef typename Traits::Coplanar_facets_detector 				   Coplanar_facets_detector;
+			typedef typename Traits::Facets_cleaner 						   Facets_cleaner;
+			typedef typename Traits::Coplanar_facets_merger   	 			   Coplanar_facets_merger;
 
 
 			// Extra typedefs.
@@ -1289,6 +1292,19 @@ namespace CGAL {
 				lod2_saver.save_mesh_as_ply(mesh, mesh_facet_colors, "LOD2");
 			}
 
+			void creating_roofs(const Container_3D &input, const FT ground_height, Buildings &buildings, const size_t exec_step) {
+
+				// Fit best polyhedron facets to the original points.
+				std::cout << "(" << exec_step << ") creating roofs;" << std::endl;
+
+				Roofs_creator roofs_creator = Roofs_creator(input, ground_height, buildings);
+				roofs_creator.create_roofs();
+
+				if (!m_silent) {
+					Log exporter; exporter.save_building_roofs_without_faces(buildings, "tmp" + std::string(PSR) + "lod_2" + std::string(PSR) + "5_roofs", true);
+				}
+			}
+
 
 			// LOD 2 -->
 
@@ -1375,7 +1391,7 @@ namespace CGAL {
 
 			void searching_for_coplanar_input_walls(Buildings &buildings, const size_t exec_step) {
 				
-				// Find coplanar input walls.
+				// Search for coplanar input walls.
 				std::cout << "(" << exec_step << ") searching for coplanar input walls;" << std::endl;
 
 				Coplanar_walls_detector coplanar_walls_detector = Coplanar_walls_detector(buildings);
@@ -1441,52 +1457,75 @@ namespace CGAL {
 				if (!m_silent) {
 					
 					Log exporter;
-					exporter.save_polyhedrons(buildings, "tmp" + std::string(PSR) + "lod_2" + std::string(PSR) + "9_in_out_estimation");
+					exporter.save_polyhedrons(buildings, "tmp" + std::string(PSR) + "lod_2" + std::string(PSR) + "9_polyhedron_in_out_estimation");
 				}
 			}
 
+			void estimating_polyhedron_facet_weights_and_quality(const Container_3D &input, const FT ground_height, Buildings &buildings, const size_t exec_step) {
 
-			// not yet handled -->
+				// Estimate polyhedron facet weights and quality.
+				std::cout << "(" << exec_step << ") estimating polyhedron facet weights and quality;" << std::endl;
 
-			void creating_roofs(const Container_3D &input, const FT ground_height, Buildings &buildings, const size_t exec_step) {
-
-				// Fit best polyhedron facets to the original points.
-				std::cout << "(" << exec_step << ") creating roofs;" << std::endl;
-
-				Roofs_creator roofs_creator = Roofs_creator(input, ground_height, buildings);
-				roofs_creator.create_roofs();
+				Polyhedron_facet_weight_quality_estimator polyhedron_facet_weight_quality_estimator(input, ground_height, buildings);
+				polyhedron_facet_weight_quality_estimator.estimate();
 
 				if (!m_silent) {
-					Log exporter; exporter.save_building_roofs_without_faces(buildings, "tmp" + std::string(PSR) + "lod_2" + std::string(PSR) + "5_roofs", true);
+					
+					Log exporter;
+					exporter.save_graphcut_facets(buildings, "tmp" + std::string(PSR) + "lod_2" + std::string(PSR) + "10_polyhedron_facets_estimation");
 				}
 			}
 
-			void applying_graphcut_3(const Container_3D &input, const FT ground_height, Buildings &buildings, const size_t exec_step) {
+			void applying_graphcut_3(Buildings &buildings, const size_t exec_step) {
 
 				// Apply graph cut.
 				std::cout << "(" << exec_step << ") applying 3D graph cut;" << std::endl;
 
-				Graphcut_3 graphcut_3 = Graphcut_3(input, ground_height);
-
-				graphcut_3.set_alpha(m_graph_cut_alpha);
+				Graphcut_3 graphcut_3;
 				graphcut_3.set_beta(m_graph_cut_beta);
-				graphcut_3.set_gamma(m_graph_cut_gamma);
-
 				graphcut_3.solve(buildings);
 
 				Log exporter;
-				if (!m_silent) exporter.save_polyhedrons(buildings, "tmp" + std::string(PSR) + "lod_2" + std::string(PSR) + "5_graphcut");
+				if (!m_silent) exporter.save_polyhedrons(buildings, "tmp" + std::string(PSR) + "lod_2" + std::string(PSR) + "11_graphcut");
 			}
 
-			void creating_clean_facets(Buildings &buildings, const bool all_facets, const size_t exec_step) {
+			void creating_clean_facets(Buildings &buildings, const size_t exec_step) {
 
-				// Create clean facets by merging and removing some polyhedron facets.
+				// Create clean facets by removing some polyhedron facets.
 				std::cout << "(" << exec_step << ") creating clean facets;" << std::endl;
 				
 				Facets_cleaner facets_cleaner = Facets_cleaner(buildings);
-				facets_cleaner.use_all_facets(all_facets);
-
 				facets_cleaner.create_clean_facets();
+
+				if (!m_silent) {
+					Log exporter; exporter.save_clean_facets(buildings, "tmp" + std::string(PSR) + "lod_2" + std::string(PSR) + "12_clean_facets");
+				}
+			}
+
+			void searching_for_coplanar_facets(Buildings &buildings, const size_t exec_step) {
+				
+				// Search for coplanar facets.
+				std::cout << "(" << exec_step << ") searching for coplanar facets;" << std::endl;
+
+				Coplanar_facets_detector coplanar_facets_detector = Coplanar_facets_detector(buildings);
+				coplanar_facets_detector.detect();
+
+				if (!m_silent) {
+					Log exporter; exporter.save_facets_based_region_growing(buildings, "tmp" + std::string(PSR) + "lod_2" + std::string(PSR) + "13_coplanar_facets");
+				}
+			}
+
+			void merging_coplanar_facets(Buildings &buildings, const size_t exec_step) {
+				
+				// Merge coplanar facets.
+				std::cout << "(" << exec_step << ") merging coplanar facets;" << std::endl;
+
+				Coplanar_facets_merger coplanar_facets_merger = Coplanar_facets_merger(buildings);
+				coplanar_facets_merger.merge();
+
+				if (!m_silent) {
+					Log exporter; exporter.save_clean_facets(buildings, "tmp" + std::string(PSR) + "lod_2" + std::string(PSR) + "14_merged_facets");
+				}
 			}
 
 			void reconstructing_lod2(const CDT &cdt, const Buildings &buildings, const Ground &ground_bbox, const FT ground_height, Mesh &mesh, Mesh_facet_colors &mesh_facet_colors, std::string name, const size_t exec_step) {
@@ -1732,16 +1771,28 @@ namespace CGAL {
 				estimating_in_out_polyhedron_labels(input, ground_height, buildings, ++exec_step);
 
 
-				// (06) ----------------------------------
-				// applying_graphcut_3(input, ground_height, buildings, exec_step);
+				// (10) ----------------------------------
+				estimating_polyhedron_facet_weights_and_quality(input, ground_height, buildings, ++exec_step);
 
 
-				// (07) ----------------------------------
-				// creating_clean_facets(buildings, false, ++exec_step);
+				// (11) ----------------------------------
+				applying_graphcut_3(buildings, ++exec_step);
+
+				
+				// (12) ----------------------------------
+				creating_clean_facets(buildings, ++exec_step);
 
 
-				// (08) ----------------------------------
-				// reconstructing_lod2(cdt, buildings, ground_bbox, ground_height, mesh_2, mesh_facet_colors_2, "LOD2", ++exec_step);
+				// (13) ----------------------------------
+				searching_for_coplanar_facets(buildings, ++exec_step);
+
+
+				// (14) ----------------------------------
+				merging_coplanar_facets(buildings, ++exec_step);
+
+
+				// (15) ----------------------------------
+				reconstructing_lod2(cdt, buildings, ground_bbox, ground_height, mesh_2, mesh_facet_colors_2, "LOD2", ++exec_step);
 			}
 
 

@@ -7,7 +7,6 @@
 // CGAL includes.
 #include <CGAL/utils.h>
 #include <CGAL/number_utils.h>
-#include <CGAL/Simple_cartesian.h>
 
 // New CGAL includes.
 #include <CGAL/Lod_2/Facet_regions_merger_3/Level_of_detail_facet_regions_merger_3.h>
@@ -38,7 +37,7 @@ namespace CGAL {
             using Output_facet  = typename Building::Region_facet;
             using Output_facets = std::vector<Output_facet>;
 
-            using Facet_regions_merger = Level_of_detail_facet_regions_merger_3<Kernel, InputBuilding>;
+            using Facet_regions_merger = Level_of_detail_facet_regions_merger_3<Kernel, Building>;
 			
             Level_of_detail_coplanar_walls_merger_step_6(Buildings &buildings) :
             m_buildings(buildings),

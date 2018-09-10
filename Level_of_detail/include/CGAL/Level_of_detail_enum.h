@@ -212,7 +212,12 @@ namespace CGAL {
 			struct Graphcut_facet {
 			
 			public:
-				std::pair<size_t, size_t> neighbours;
+				using Data 		= std::pair<int, int>;
+				using Data_pair = std::pair<Data, Data>;
+
+				Data 	  data;
+				Data_pair neighbours;
+
 				FT weight  = -FT(1);
 				FT quality = -FT(1);
 			};
@@ -243,6 +248,8 @@ namespace CGAL {
 
 				FT in  = -FT(1);
 				FT out = -FT(1);
+
+				FT weight = -FT(1);
 			};
 
 			using Polyhedrons = std::vector<Polyhedron>;
@@ -258,7 +265,7 @@ namespace CGAL {
 
 			bool is_clean = false;
 
-			using Clean_facet  = std::pair<std::vector<Point_3>, CGAL::Color>;
+			using Clean_facet  = std::vector<Point_3>;
 			using Clean_facets = std::vector<Clean_facet>;
 			
 			Clean_facets clean_facets;
