@@ -1774,6 +1774,8 @@ namespace CGAL {
 				// (10) ----------------------------------
 				estimating_polyhedron_facet_weights_and_quality(input, ground_height, buildings, ++exec_step);
 
+				return;
+
 
 				// (11) ----------------------------------
 				applying_graphcut_3(buildings, ++exec_step);

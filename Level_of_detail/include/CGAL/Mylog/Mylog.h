@@ -93,6 +93,78 @@ namespace CGAL {
 				return true;
 			}
 
+			template<class Polygon>
+			void export_polygon(const std::string file_name, const Polygon &polygon) {
+				
+				clear();
+
+				size_t num_vertices = polygon.size();
+				size_t num_facets	= 1;
+
+				out << 
+				"ply" + std::string(PN) + ""               					     << 
+				"format ascii 1.0"  + std::string(PN) + ""     				     << 
+				"element vertex "        				   << num_vertices  << "" + std::string(PN) + "" << 
+				"property double x" + std::string(PN) + ""    				     << 
+				"property double y" + std::string(PN) + ""    				     << 
+				"property double z" + std::string(PN) + "" 					     <<
+				"element face " 						   << num_facets    << "" + std::string(PN) + "" << 
+				"property list uchar int vertex_indices" + std::string(PN) + ""  <<
+				"property uchar red"   + std::string(PN) + "" 				     <<
+				"property uchar green" + std::string(PN) + "" 				     <<
+				"property uchar blue"  + std::string(PN) + "" 				     <<
+				"end_header" + std::string(PN) + "";
+
+				for (typename Polygon::Vertex_const_iterator vit = polygon.vertices_begin(); vit != polygon.vertices_end(); ++vit)
+					out << *vit << " 0 " << std::endl;
+
+				size_t count = 0;
+				const Color color = generate_random_color();
+
+				out << polygon.size() << " ";
+				for (typename Polygon::Vertex_const_iterator vit = polygon.vertices_begin(); vit != polygon.vertices_end(); ++vit)
+					out << count++ << " ";
+				out << color << std::endl;
+
+				save(file_name, ".ply");
+			}
+
+			template<class Facet, class Vertices>
+			void export_polygon(const std::string file_name, const Facet &facet, const Vertices &vertices) {
+				
+				clear();
+
+				size_t num_vertices = facet.indices.size();
+				size_t num_facets	= 1;
+
+				out << 
+				"ply" + std::string(PN) + ""               					     << 
+				"format ascii 1.0"  + std::string(PN) + ""     				     << 
+				"element vertex "        				   << num_vertices  << "" + std::string(PN) + "" << 
+				"property double x" + std::string(PN) + ""    				     << 
+				"property double y" + std::string(PN) + ""    				     << 
+				"property double z" + std::string(PN) + "" 					     <<
+				"element face " 						   << num_facets    << "" + std::string(PN) + "" << 
+				"property list uchar int vertex_indices" + std::string(PN) + ""  <<
+				"property uchar red"   + std::string(PN) + "" 				     <<
+				"property uchar green" + std::string(PN) + "" 				     <<
+				"property uchar blue"  + std::string(PN) + "" 				     <<
+				"end_header" + std::string(PN) + "";
+
+				for (size_t i = 0; i < facet.indices.size(); ++i)
+					out << vertices[facet.indices[i]] << std::endl;
+
+				size_t count = 0;
+				const Color color = generate_random_color();
+
+				out << facet.indices.size() << " ";
+				for (size_t i = 0; i < facet.indices.size(); ++i)
+					out << count++ << std::endl;
+				out << color << std::endl;
+
+				save(file_name, ".ply");
+			}
+
 			template<class Buildings>
 			void save_graphcut_facets(const Buildings &buildings, const std::string file_name) {
 				
@@ -1200,8 +1272,21 @@ namespace CGAL {
 			template<class Points>
 			void export_points(const std::string &name, Points &points) {
 
+				clear();
+
 				for (typename Points::const_iterator it = points.begin(); it != points.end(); ++it)
 					out << *it << " " << 0 << std::endl;
+
+				save(name, ".xyz");
+			}
+
+			template<class Points>
+			void export_3d_points(const std::string &name, Points &points) {
+
+				clear();
+
+				for (typename Points::const_iterator it = points.begin(); it != points.end(); ++it)
+					out << *it << std::endl;
 
 				save(name, ".xyz");
 			}
