@@ -1,5 +1,5 @@
-#ifndef CGAL_LEVEL_OF_DETAIL_LOD2_FROM_KINETIC_RECONSTRUCTION_STEP_15_H
-#define CGAL_LEVEL_OF_DETAIL_LOD2_FROM_KINETIC_RECONSTRUCTION_STEP_15_H
+#ifndef CGAL_LEVEL_OF_DETAIL_LOD2_FROM_KINETIC_RECONSTRUCTION_STEP_16_H
+#define CGAL_LEVEL_OF_DETAIL_LOD2_FROM_KINETIC_RECONSTRUCTION_STEP_16_H
 
 // STL includes.
 #include <map>
@@ -23,7 +23,7 @@ namespace CGAL {
 	namespace LOD {
 
 		template<class InputKernel, class InputHDS, class InputCDT, class InputBuilding, class InputBuildings, class FacetHandle>
-		class LOD2_builder_from_kinetic_step_15 : public Modifier_base<InputHDS> {
+		class LOD2_builder_from_kinetic_step_16 : public Modifier_base<InputHDS> {
 		
 		public:
 			using Kernel   			 = InputKernel;
@@ -66,7 +66,7 @@ namespace CGAL {
             typename Kernel::Compute_scalar_product_3 		  dot_product_3;
 			typename Kernel::Construct_cross_product_vector_3 cross_product_3;
 
-			LOD2_builder_from_kinetic_step_15(const CDT &cdt, const Buildings &buildings, const Ground &ground, const FT ground_height, Facet_colors &facet_colors) : 
+			LOD2_builder_from_kinetic_step_16(const CDT &cdt, const Buildings &buildings, const Ground &ground, const FT ground_height, Facet_colors &facet_colors) : 
     		m_cdt(cdt),
 			m_buildings(buildings), 
 			m_ground(ground),
@@ -422,7 +422,7 @@ namespace CGAL {
         };
 
         template<class InputKernel, class InputCDT, class InputBuilding, class InputBuildings, class OutputMesh>
-		class Level_of_detail_lod2_from_kinetic_reconstruction_step_15 {
+		class Level_of_detail_lod2_from_kinetic_reconstruction_step_16 {
 
 		public:
 			using Kernel    = InputKernel;
@@ -435,11 +435,11 @@ namespace CGAL {
             using HDS = typename Mesh::HalfedgeDS;
 
             using Mesh_facet_handle = typename Mesh::Facet_const_handle;
-            using Mesh_builder 		= LOD2_builder_from_kinetic_step_15<Kernel, HDS, CDT, Building, Buildings, Mesh_facet_handle>;
+            using Mesh_builder 		= LOD2_builder_from_kinetic_step_16<Kernel, HDS, CDT, Building, Buildings, Mesh_facet_handle>;
 			using Mesh_facet_colors = typename Mesh_builder::Facet_colors;
 			using Ground 			= typename Mesh_builder::Ground;
 
-            Level_of_detail_lod2_from_kinetic_reconstruction_step_15(const CDT &cdt, const Buildings &buildings, const Ground &ground, const FT ground_height, Mesh_facet_colors &mesh_facet_colors) :
+            Level_of_detail_lod2_from_kinetic_reconstruction_step_16(const CDT &cdt, const Buildings &buildings, const Ground &ground, const FT ground_height, Mesh_facet_colors &mesh_facet_colors) :
             m_builder(cdt, buildings, ground, ground_height, mesh_facet_colors) { }
 
             inline void reconstruct(Mesh &mesh) {
@@ -452,4 +452,4 @@ namespace CGAL {
     }
 }
 
-#endif // CGAL_LEVEL_OF_DETAIL_LOD2_FROM_KINETIC_RECONSTRUCTION_STEP_15_H
+#endif // CGAL_LEVEL_OF_DETAIL_LOD2_FROM_KINETIC_RECONSTRUCTION_STEP_16_H

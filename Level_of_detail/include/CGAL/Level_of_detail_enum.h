@@ -220,6 +220,8 @@ namespace CGAL {
 
 				FT weight  = -FT(1);
 				FT quality = -FT(1);
+
+				bool is_valid = true;
 			};
 
 			using Graphcut_facets = std::vector<Graphcut_facet>;

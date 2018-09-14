@@ -1,5 +1,5 @@
-#ifndef CGAL_LEVEL_OF_DETAIL_IN_OUT_POLYHEDRON_ESTIMATOR_STEP_9_H
-#define CGAL_LEVEL_OF_DETAIL_IN_OUT_POLYHEDRON_ESTIMATOR_STEP_9_H
+#ifndef CGAL_LEVEL_OF_DETAIL_IN_OUT_POLYHEDRON_ESTIMATOR_STEP_10_H
+#define CGAL_LEVEL_OF_DETAIL_IN_OUT_POLYHEDRON_ESTIMATOR_STEP_10_H
 
 // STL includes.
 #include <vector>
@@ -9,6 +9,9 @@
 #include <CGAL/utils.h>
 #include <CGAL/number_utils.h>
 #include <CGAL/Polygon_2_algorithms.h>
+
+// #include <CGAL/Delaunay_triangulation_3.h>
+
 #include <CGAL/Barycentric_coordinates_2/Mean_value_2.h>
 #include <CGAL/Barycentric_coordinates_2/Segment_coordinates_2.h>
 #include <CGAL/Barycentric_coordinates_2/Generalized_barycentric_coordinates_2.h>
@@ -18,7 +21,7 @@ namespace CGAL {
 	namespace LOD {
 
 		template<class InputKernel, class InputContainer, class InputBuilding, class InputBuildings>
-		class Level_of_detail_in_out_polyhedron_estimator_step_9 {
+		class Level_of_detail_in_out_polyhedron_estimator_step_10 {
             
         public:
             using Kernel    = InputKernel;
@@ -68,7 +71,12 @@ namespace CGAL {
 
             using Stats = std::pair<FT, FT>;
 
-            Level_of_detail_in_out_polyhedron_estimator_step_9(const Input &input, const FT ground_height, Buildings &buildings) :
+            // using Delaunay_3 = CGAL::Delaunay_triangulation_3<Kernel>;
+            
+            // using Tetrahedron    = typename Delaunay_3::Tetrahedron;
+            // using Cells_iterator = typename Delaunay_3::Finite_cells_iterator;
+
+            Level_of_detail_in_out_polyhedron_estimator_step_10(const Input &input, const FT ground_height, Buildings &buildings) :
             m_input(input),
             m_buildings(buildings),
             m_ground_height(ground_height),
@@ -461,12 +469,48 @@ namespace CGAL {
             }
 
             FT compute_weight(const Polyhedron &polyhedron) const {
+                
                 return FT(1);
+
+                // const FT weight = compute_volume(polyhedron);
+                // return get_weight(weight);
             }
+
+            /*
+            FT compute_volume(const Polyhedron &polyhedron) const {
+                
+                Delaunay_3 delaunay_3;
+                create_triangulation_3(polyhedron, delaunay_3);
+
+                FT total_volume = FT(0);
+                for (Cells_iterator cit = delaunay_3.finite_cells_begin(); cit != delaunay_3.finite_cells_end(); ++cit) {
+                    const Tetrahedron &tetrahedron = delaunay_3.tetrahedron(cit);
+
+                    const FT volume = tetrahedron.volume();
+                    total_volume += volume;
+                }
+                return total_volume;
+            }
+
+            void create_triangulation_3(const Polyhedron &polyhedron, Delaunay_3 &delaunay_3) const {
+
+                delaunay_3.clear();
+
+                const Vertices &vertices = polyhedron.vertices;
+                for (size_t i = 0; i < vertices.size(); ++i) {
+                    
+                    const Point_3 &p = vertices[i];
+                    delaunay_3.insert(p);
+                }
+            }
+
+            FT get_weight(const FT weight) const {
+                return weight;
+            } */
         };
 
     } // LOD
 
 } // CGAL
 
-#endif // CGAL_LEVEL_OF_DETAIL_IN_OUT_POLYHEDRON_ESTIMATOR_STEP_9_H
+#endif // CGAL_LEVEL_OF_DETAIL_IN_OUT_POLYHEDRON_ESTIMATOR_STEP_10_H

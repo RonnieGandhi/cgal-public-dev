@@ -1,5 +1,5 @@
-#ifndef CGAL_LEVEL_OF_DETAIL_GRAPHCUT_STEP_11_H
-#define CGAL_LEVEL_OF_DETAIL_GRAPHCUT_STEP_11_H 
+#ifndef CGAL_LEVEL_OF_DETAIL_GRAPHCUT_STEP_12_H
+#define CGAL_LEVEL_OF_DETAIL_GRAPHCUT_STEP_12_H 
 
 // STL includes.
 #include <map>
@@ -19,7 +19,7 @@ namespace CGAL {
 	namespace LOD {
 
 		template<class InputKernel, class InputBuilding, class InputBuildings>
-		class Level_of_detail_graphcut_step_11 {
+		class Level_of_detail_graphcut_step_12 {
 
 		public:
             using Kernel    = InputKernel;
@@ -28,8 +28,8 @@ namespace CGAL {
 
 			typedef typename Kernel::FT FT;
 
-			typedef Maxflow::Graph 			Graph;
-			typedef typename Graph::node_id Node_id;
+			using Graph   = Maxflow::Graph;
+			using Node_id = typename Graph::node_id;
 
 			using Buildings_iterator = typename Buildings::iterator;
 
@@ -42,8 +42,8 @@ namespace CGAL {
 			using Neighbour  = typename Graphcut_facet::Data;
 			using Neighbours = typename Graphcut_facet::Data_pair;
 
-			Level_of_detail_graphcut_step_11() : 
-			m_beta(FT(1))
+			Level_of_detail_graphcut_step_12() : 
+			m_beta(FT(0))
 			{ }
 
 			void set_beta(const FT beta) {
@@ -64,9 +64,7 @@ namespace CGAL {
 			}
 
 		private:
-			FT m_alpha;
 			FT m_beta;
-			FT m_gamma;
 
 			void process_building(Building &building) const {
 
@@ -171,4 +169,4 @@ namespace CGAL {
 
 } // LOD
 
-#endif // CGAL_LEVEL_OF_DETAIL_GRAPHCUT_STEP_11_H
+#endif // CGAL_LEVEL_OF_DETAIL_GRAPHCUT_STEP_12_H

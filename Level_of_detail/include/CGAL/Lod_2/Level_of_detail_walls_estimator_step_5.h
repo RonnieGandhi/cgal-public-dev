@@ -1,5 +1,5 @@
-#ifndef CGAL_LEVEL_OF_DETAIL_WALLS_ESTIMATOR_STEP_4_H
-#define CGAL_LEVEL_OF_DETAIL_WALLS_ESTIMATOR_STEP_4_H
+#ifndef CGAL_LEVEL_OF_DETAIL_WALLS_ESTIMATOR_STEP_5_H
+#define CGAL_LEVEL_OF_DETAIL_WALLS_ESTIMATOR_STEP_5_H
 
 // STL includes.
 #include <vector>
@@ -14,7 +14,7 @@ namespace CGAL {
 	namespace LOD {
 
 		template<class InputKernel, class InputBuilding, class InputBuildings>
-		class Level_of_detail_walls_estimator_step_4 {
+		class Level_of_detail_walls_estimator_step_5 {
             
         public:
             typedef InputKernel    Kernel;
@@ -33,7 +33,7 @@ namespace CGAL {
             using Wall_boundary     = typename Wall::Wall_boundary;
             using Building_boundary = typename Building::Boundary;
 
-            Level_of_detail_walls_estimator_step_4(const FT ground_height, Buildings &buildings) :
+            Level_of_detail_walls_estimator_step_5(const FT ground_height, Buildings &buildings) :
             m_ground_height(ground_height),
             m_buildings(buildings)
             { }
@@ -97,4 +97,4 @@ namespace CGAL {
     }
 }
 
-#endif // CGAL_LEVEL_OF_DETAIL_WALLS_ESTIMATOR_STEP_4_H
+#endif // CGAL_LEVEL_OF_DETAIL_WALLS_ESTIMATOR_STEP_5_H

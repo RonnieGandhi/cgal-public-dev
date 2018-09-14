@@ -1,5 +1,5 @@
-#ifndef CGAL_LEVEL_OF_DETAIL_WEIGHT_QUALITY_POLYHEDRON_ESTIMATOR_STEP_10_H
-#define CGAL_LEVEL_OF_DETAIL_WEIGHT_QUALITY_POLYHEDRON_ESTIMATOR_STEP_10_H
+#ifndef CGAL_LEVEL_OF_DETAIL_WEIGHT_QUALITY_POLYHEDRON_ESTIMATOR_STEP_11_H
+#define CGAL_LEVEL_OF_DETAIL_WEIGHT_QUALITY_POLYHEDRON_ESTIMATOR_STEP_11_H
 
 // STL includes.
 #include <vector>
@@ -13,6 +13,9 @@
 #include <CGAL/Barycentric_coordinates_2/Mean_value_2.h>
 #include <CGAL/Barycentric_coordinates_2/Generalized_barycentric_coordinates_2.h>
 
+// Boost includes.
+#include <boost/tuple/tuple.hpp>
+
 // New CGAL includes.
 #include <CGAL/Mylog/Mylog.h>
 
@@ -21,7 +24,7 @@ namespace CGAL {
 	namespace LOD {
 
 		template<class InputKernel, class InputContainer, class InputBuilding, class InputBuildings>
-		class Level_of_detail_weight_quality_polyhedron_estimator_step_10 {
+		class Level_of_detail_weight_quality_polyhedron_estimator_step_11 {
             
         public:
             using Kernel    = InputKernel;
@@ -53,12 +56,19 @@ namespace CGAL {
             using Graphcut_facet_data      = typename Graphcut_facet::Data;
             using Graphcut_facet_data_pair = typename Graphcut_facet::Data_pair;
 
+            using Wall  = typename Building::Wall;
+            using Walls = typename Building::Walls;
+
+            using Wall_boundary = typename Wall::Wall_boundary;
+
             using Points_2 = std::vector<Point_2>;
             using Points_3 = std::vector<Point_3>;
 
             using Polygon = CGAL::Polygon_2<Kernel>;
 
-            typename Kernel::Compute_squared_length_3   squared_length_3;
+            typename Kernel::Compute_squared_length_3 squared_length_3;
+
+            typename Kernel::Compute_squared_distance_2 squared_distance_2;
             typename Kernel::Compute_squared_distance_3 squared_distance_3;
             
             typename Kernel::Compute_scalar_product_3 		  dot_product_3;
@@ -69,16 +79,24 @@ namespace CGAL {
             using Mean_value = CGAL::Barycentric_coordinates::Mean_value_2<Kernel>;
             using Mean_value_coordinates = CGAL::Barycentric_coordinates::Generalized_barycentric_coordinates_2<Mean_value, Kernel>;
 
+            using Label     = int;
+			using Label_map = typename Input:: template Property_map<Label>;
+
             using Log = CGAL::LOD::Mylog;
 
-            Level_of_detail_weight_quality_polyhedron_estimator_step_10(const Input &input, const FT ground_height, Buildings &buildings) :
+            Level_of_detail_weight_quality_polyhedron_estimator_step_11(const Input &input, const FT ground_height, Buildings &buildings) :
             m_input(input),
             m_buildings(buildings),
             m_ground_height(ground_height),
             m_tolerance(FT(1) / FT(100000)),
             m_edge_length_tolerance(FT(1) / FT(1000)),
-            m_distance_threshold(FT(3))
-            { }
+            m_distance_threshold(FT(1) / FT(2)),
+            m_big_value(FT(100000000000000)),
+            m_bc_tolerance_top(FT(6) / FT(5)),
+            m_bc_tolerance_bottom(-FT(1) / FT(5)) { 
+
+                boost::tie(m_labels, boost::tuples::ignore) = m_input.template property_map<Label>("label");
+            }
 
             void estimate() {
 
@@ -101,6 +119,12 @@ namespace CGAL {
             const FT m_tolerance;
             const FT m_edge_length_tolerance;
             const FT m_distance_threshold;
+            const FT m_big_value;
+
+            const FT m_bc_tolerance_top;
+            const FT m_bc_tolerance_bottom;
+
+            Label_map m_labels;
 
             void process_building(Building &building) {
 
@@ -112,11 +136,79 @@ namespace CGAL {
                 
                 gc_facets.clear();
                 
-                const Indices &interior_indices = building.interior_indices;
-                const Polyhedrons &polyhedrons  = building.polyhedrons;
+                const Polyhedrons &polyhedrons = building.polyhedrons;
+
+                Indices interior_indices;
+                create_interior_indices(building, interior_indices);
 
                 for (int i = 0; i < polyhedrons.size(); ++i)
                     add_graphcut_facets(interior_indices, polyhedrons, i, gc_facets);
+            }
+
+            void create_interior_indices(const Building &building, Indices &interior_indices) const {
+
+                const Label facade = 1;
+                const Label roof   = 2;
+
+                interior_indices.clear();
+
+                for (size_t i = 0; i < m_input.number_of_points(); ++i) {
+                    const Point_3 &p = m_input.point(i);
+        
+                    if (m_labels[i] == facade || m_labels[i] == roof) {
+
+                        if (belongs_to_building(p, building))
+                            interior_indices.push_back(i);
+                    }
+                }
+            }
+
+            bool belongs_to_building(const Point_3 &p, const Building &building) const {
+
+                Point_3 minp, maxp;
+                compute_3d_bounding_box(building, minp, maxp);
+
+                return belongs_to_bbox(p, minp, maxp);
+            }
+
+            void compute_3d_bounding_box(const Building &building, Point_3 &minp, Point_3 &maxp) const {
+
+                const Walls &walls = building.walls;
+
+                FT minx =  m_big_value, miny =  m_big_value, minz =  m_big_value;
+                FT maxx = -m_big_value, maxy = -m_big_value, maxz = -m_big_value;
+
+                for (size_t i = 0; i < walls.size(); ++i) {
+                    const Wall_boundary &boundary = walls[i].boundary;
+                    
+                    for (size_t j = 0; j < boundary.size(); ++j) {
+                        const Point_3 &p = boundary[j];
+
+                        minx = CGAL::min(minx, p.x());
+                        miny = CGAL::min(miny, p.y());
+
+                        maxx = CGAL::max(maxx, p.x());
+                        maxy = CGAL::max(maxy, p.y());
+                    }
+                }
+
+                const FT extra_distance = m_distance_threshold;
+
+                minx -= extra_distance;
+                maxx += extra_distance;
+
+                miny -= extra_distance;
+                maxy += extra_distance;
+
+                minz = m_ground_height;
+                maxz = m_big_value;
+
+                minp = Point_3(minx, miny, minz);
+                maxp = Point_3(maxx, maxy, maxz);
+            }
+
+            bool belongs_to_bbox(const Point_3 &q, const Point_3 &minp, const Point_3 &maxp) const {
+                return (q.x() > minp.x() && q.x() < maxp.x()) && (q.y() > minp.y() && q.y() < maxp.y()) && (q.z() > minp.z() && q.z() < maxp.z());
             }
 
             void add_graphcut_facets(const Indices &interior_indices, const Polyhedrons &polyhedrons, const int poly_index, Graphcut_facets &gc_facets) const {
@@ -130,9 +222,10 @@ namespace CGAL {
                 if (was_already_added(poly_index, facet_index, gc_facets))
                     return;
 
-                std::cout << poly_index << " " << facet_index << std::endl;
+                // std::cout << poly_index << " " << facet_index << std::endl;
 
-                if (poly_index == 2 && facet_index == 1) {
+                // if (poly_index  == 2 && facet_index == 1) {
+                // if (poly_index == 12 && facet_index == 5) {
 
                     const Polyhedron &polyhedron = polyhedrons[poly_index];
                     
@@ -147,9 +240,13 @@ namespace CGAL {
                     compute_weight(facets[facet_index], vertices, gc_facet);
                     compute_quality(interior_indices, facets[facet_index], vertices, gc_facet);
 
-                    if (gc_facet.quality == FT(0)) gc_facets.push_back(gc_facet);
-                    exit(0);
-                }
+                    if (gc_facet.quality != get_default_quality()) gc_facet.is_valid = true;
+                    else gc_facet.is_valid = false;
+
+                    gc_facets.push_back(gc_facet);
+                    
+                    // exit(0);
+                // }
             }
 
             bool was_already_added(const int poly_index, const int facet_index, const Graphcut_facets &gc_facets) const {
@@ -166,8 +263,45 @@ namespace CGAL {
                 return false;
             }
 
-            void compute_weight(const Polyhedron_facet &, const Polyhedron_vertices &, Graphcut_facet &gc_facet) const {
-                gc_facet.weight = FT(1);
+            void compute_weight(const Polyhedron_facet &facet, const Polyhedron_vertices &vertices, Graphcut_facet &gc_facet) const {
+
+                const FT weight = compute_facet_area(facet, vertices);
+                gc_facet.weight = get_weight(weight);
+            }
+
+            FT compute_facet_area(const Polyhedron_facet &facet, const Polyhedron_vertices &vertices) const {
+
+                Vector_3 source_normal;
+                bool success = compute_source_normal(facet, vertices, source_normal);
+
+                if (!success) return get_default_weight();
+
+                Vector_3 target_normal;
+                compute_target_normal(target_normal);
+
+                if (source_normal == -target_normal) source_normal = target_normal;
+
+                FT angle; Vector_3 axis;
+                success = compute_angle_and_axis(source_normal, target_normal, angle, axis);
+
+                Point_3 b;
+                compute_3d_polygon_barycentre(facet, vertices, b);
+
+                if (!success) return get_default_weight();
+                    
+                Polygon polygon;
+                success = create_polygon(facet, vertices, b, angle, axis, polygon);
+
+                if (!success) return get_default_weight();
+                return CGAL::abs(polygon.area());
+            }
+
+            FT get_default_weight() const {
+                return FT(100000);
+            }
+
+            FT get_weight(const FT weight) const {
+                return weight;
             }
 
             void compute_quality(const Indices &interior_indices, const Polyhedron_facet &facet, const Polyhedron_vertices &vertices, Graphcut_facet &gc_facet) const {
@@ -177,13 +311,13 @@ namespace CGAL {
 
                 if (neigh_1.first < 0 || neigh_1.second < 0) {
                     
-                    gc_facet.quality = FT(1);
+                    gc_facet.quality = get_default_quality();
                     return;
                 }
 
                 if (neigh_2.first < 0 || neigh_2.second < 0) {
                 
-                    gc_facet.quality = FT(1);
+                    gc_facet.quality = get_default_quality();
                     return;    
                 }
 
@@ -192,22 +326,27 @@ namespace CGAL {
 
                 if (closest.size() == 0) {
                     
-                    gc_facet.quality = FT(1);
+                    gc_facet.quality = get_default_quality();
                     return;
                 }
 
                 Indices internal;
-                find_internal_points(closest, facet, vertices, internal);
+                const FT initial_quality = find_internal_points(closest, facet, vertices, internal);
 
-                if (internal.size() < 100) {
+                if (internal.size() == 0) {
                     
-                    gc_facet.quality = FT(1);
+                    gc_facet.quality = get_default_quality();
                     return;
                 }
 
-                // std::cout << internal.size() << std::endl;
+                const FT extra_quality = compute_extra_quality(closest, internal);
+                gc_facet.quality       = compute_final_quality(initial_quality, extra_quality);
 
-                gc_facet.quality = FT(0);
+                // std::cout << internal.size() << " : " << closest.size() << " : " << initial_quality << " : " << extra_quality << " : " << gc_facet.quality << std::endl;
+            }
+
+            FT get_default_quality() const {
+                return FT(1);
             }
 
             void find_closest_points(const Indices &interior_indices, const Polyhedron_facet &facet, const Polyhedron_vertices &vertices, Indices &closest) const {
@@ -274,15 +413,15 @@ namespace CGAL {
                 }
             }
 
-            void find_internal_points(const Indices &closest, const Polyhedron_facet &facet, const Polyhedron_vertices &vertices, Indices &internal) const {
+            FT find_internal_points(const Indices &closest, const Polyhedron_facet &facet, const Polyhedron_vertices &vertices, Indices &internal) const {
 
                 internal.clear();
-                if (closest.size() == 0) return;
+                if (closest.size() == 0) return get_default_quality();
 
                 Vector_3 source_normal;
                 bool success = compute_source_normal(facet, vertices, source_normal);
 
-                if (!success) return;
+                if (!success) return get_default_quality();
 
                 Vector_3 target_normal;
                 compute_target_normal(target_normal);
@@ -292,36 +431,37 @@ namespace CGAL {
                 FT angle; Vector_3 axis;
                 success = compute_angle_and_axis(source_normal, target_normal, angle, axis);
 
-                Point_3 b1;
-                compute_barycentre(facet, vertices, b1);
+                Point_3 b;
+                compute_3d_polygon_barycentre(facet, vertices, b);
 
-                Point_3 b2;
-                compute_barycentre(closest, b2);
-
-                const Point_3 b = Point_3((b1.x() + b2.x()) / FT(2), (b1.y() + b2.y()) / FT(2), (b1.z() + b2.z()) / FT(2));
-
-                if (!success) return;
+                if (!success) return get_default_quality();
                     
                 Polygon polygon;
-                success = create_polygon(facet, vertices, b1, angle, axis, polygon);
+                success = create_polygon(facet, vertices, b, angle, axis, polygon);
 
-                if (!success) return;
+                if (!success) return get_default_quality();
 
                 Points_2 queries;
-                create_queries(closest, b2, angle, axis, queries);
+                create_queries(closest, b, angle, axis, queries);
 
-                Log logger;
-                logger.export_polygon("tmp" + std::string(PSR) + "lod_2" + std::string(PSR) + "debug_polygon", facet, vertices);
-                logger.export_polygon("tmp" + std::string(PSR) + "lod_2" + std::string(PSR) + "debug_polygon_rotated", polygon);
+                // Log logger;
+                // logger.export_polygon("tmp" + std::string(PSR) + "lod_2" + std::string(PSR) + "debug_polygon", facet, vertices);
+                // logger.export_polygon("tmp" + std::string(PSR) + "lod_2" + std::string(PSR) + "debug_polygon_rotated", polygon);
                 
-                Points_3 closest_points(closest.size());
-                for (size_t i = 0; i < closest.size(); ++i)
-                    closest_points[i] = m_input.point(closest[i]);
+                // Points_3 closest_points(closest.size());
+                // for (size_t i = 0; i < closest.size(); ++i)
+                //     closest_points[i] = m_input.point(closest[i]);
 
-                logger.export_3d_points("tmp" + std::string(PSR) + "lod_2" + std::string(PSR) + "debug_points", closest_points);
-                logger.export_points("tmp" + std::string(PSR) + "lod_2" + std::string(PSR) + "debug_points_rotated", queries);
+                // logger.export_3d_points("tmp" + std::string(PSR) + "lod_2" + std::string(PSR) + "debug_points", closest_points);
+                // logger.export_points("tmp" + std::string(PSR) + "lod_2" + std::string(PSR) + "debug_points_rotated", queries);
 
-                find_points_inside_polygon(polygon, queries, closest, internal);
+                Indices tmp;
+                find_points_inside_polygon(polygon, queries, closest, tmp, internal);
+                
+                if (internal.size() == 0) 
+                    return get_default_quality();
+
+                return estimate_initial_quality(polygon, queries, tmp);
             }
 
             bool compute_source_normal(const Polyhedron_facet &facet, const Polyhedron_vertices &vertices, Vector_3 &normal) const {
@@ -388,7 +528,7 @@ namespace CGAL {
                 return true;
 			}
 
-            void compute_barycentre(const Polyhedron_facet &facet, const Polyhedron_vertices &vertices, Point_3 &b) const {
+            void compute_3d_polygon_barycentre(const Polyhedron_facet &facet, const Polyhedron_vertices &vertices, Point_3 &b) const {
                 
                 CGAL_precondition(facet.indices.size() != 0);
                 FT x = FT(0), y = FT(0), z = FT(0);
@@ -408,25 +548,26 @@ namespace CGAL {
                 b = Point_3(x, y, z);
             }
 
-            void compute_barycentre(const Indices &closest, Point_3 &b) const {
+            /*
+            void compute_barycentre(const Indices &indices, Point_3 &b) const {
                 
-                CGAL_precondition(closest.size() != 0);
+                CGAL_precondition(indices.size() != 0);
                 FT x = FT(0), y = FT(0), z = FT(0);
 
-                for (size_t i = 0; i < closest.size(); ++i) {
-                    const Point_3 &p = m_input.point(closest[i]);
+                for (size_t i = 0; i < indices.size(); ++i) {
+                    const Point_3 &p = m_input.point(indices[i]);
 
                     x += p.x();
                     y += p.y();
                     z += p.z();
                 }
 
-                x /= static_cast<FT>(closest.size());
-                y /= static_cast<FT>(closest.size());
-                z /= static_cast<FT>(closest.size());
+                x /= static_cast<FT>(indices.size());
+                y /= static_cast<FT>(indices.size());
+                z /= static_cast<FT>(indices.size());
 
                 b = Point_3(x, y, z);
-            }
+            } */
 
             bool create_polygon(const Polyhedron_facet &facet, const Polyhedron_vertices &vertices, const Point_3 &b, const FT angle, const Vector_3 &axis, Polygon &polygon) const {
 
@@ -488,11 +629,13 @@ namespace CGAL {
                 }
             }
 
-            void find_points_inside_polygon(const Polygon &polygon, const Points_2 &queries, const Indices &closest, Indices &internal) const {
+            void find_points_inside_polygon(const Polygon &polygon, const Points_2 &queries, const Indices &closest, Indices &tmp, Indices &internal) const {
                 
                 CGAL_precondition(queries.size() == closest.size());
 
+                tmp.clear();
                 internal.clear();
+
                 Mean_value_coordinates mean_value_coordinates(polygon.vertices_begin(), polygon.vertices_end());
 
                 for (size_t i = 0; i < queries.size(); ++i) {
@@ -501,16 +644,193 @@ namespace CGAL {
                     Coordinates coordinates;
                     mean_value_coordinates(query, std::back_inserter(coordinates));
 
-                    if (is_inside_polygon(coordinates))
+                    if (is_inside_polygon(coordinates)) {
+                     
+                        tmp.push_back(i);
                         internal.push_back(closest[i]);
+                    }
                 }
             }
 
             bool is_inside_polygon(const Coordinates &coordinates) const {
                 
                 for (size_t i = 0 ; i < coordinates.size(); ++i)
-                    if (coordinates[i] <= FT(0) || coordinates[i] >= FT(1)) return false;
+                    if (coordinates[i] < m_bc_tolerance_bottom || coordinates[i] > m_bc_tolerance_top) return false;
                 return true;
+            }
+
+            FT estimate_initial_quality(const Polygon &polygon, const Points_2 &queries, const Indices &tmp) const {
+
+                Points_2 bbox1;
+                compute_2d_polygon_bounding_box(polygon, bbox1);
+
+                Points_2 bbox2;
+                compute_2d_points_bounding_box(queries, tmp, bbox2);
+
+                const FT area1 = compute_bbox_area(bbox1);
+                const FT area2 = compute_bbox_area(bbox2);
+
+                FT quality = -FT(1);
+
+                if (area1 > area2) quality = area2 / area1;
+                else quality = area1 / area2;
+
+                CGAL_precondition(quality >= FT(0) && quality <= FT(1));
+
+                const FT initial_quality = get_quality(quality);
+                return initial_quality;
+            }
+
+            FT get_quality(const FT quality) const {
+                
+                CGAL_precondition(quality >= FT(0) && quality <= FT(1));
+                return inverse(quality);
+            }
+
+            FT inverse(const FT value) const {
+                
+                CGAL_precondition(value >= FT(0) && value <= FT(1));
+                return FT(1) - value;
+            }
+
+            void compute_2d_polygon_bounding_box(const Polygon &polygon, Points_2 &bbox) const {
+                
+                CGAL_precondition(polygon.size() > 2);
+                
+                FT minx =  m_big_value, miny =  m_big_value;
+                FT maxx = -m_big_value, maxy = -m_big_value;
+
+                for (size_t i = 0; i < polygon.size(); ++i) {
+                    const Point_2 &p = polygon.vertex(i);
+
+                    minx = CGAL::min(minx, p.x());
+                    miny = CGAL::min(miny, p.y());
+
+                    maxx = CGAL::max(maxx, p.x());
+                    maxy = CGAL::max(maxy, p.y());
+                }
+
+                bbox.clear();
+                bbox.resize(4);
+
+                bbox[0] = Point_2(minx, miny);
+                bbox[1] = Point_2(maxx, miny);
+                bbox[2] = Point_2(maxx, maxy);
+                bbox[3] = Point_2(minx, maxy);
+            }
+
+            void compute_2d_points_bounding_box(const Points_2 &queries, const Indices &tmp, Points_2 &bbox) const {
+                
+                CGAL_precondition(tmp.size() > 0);
+                
+                FT minx =  m_big_value, miny =  m_big_value;
+                FT maxx = -m_big_value, maxy = -m_big_value;
+
+                for (size_t i = 0; i < tmp.size(); ++i) {
+                    const Point_2 &p = queries[tmp[i]];
+
+                    minx = CGAL::min(minx, p.x());
+                    miny = CGAL::min(miny, p.y());
+
+                    maxx = CGAL::max(maxx, p.x());
+                    maxy = CGAL::max(maxy, p.y());
+                }
+
+                bbox.clear();
+                bbox.resize(4);
+
+                bbox[0] = Point_2(minx, miny);
+                bbox[1] = Point_2(maxx, miny);
+                bbox[2] = Point_2(maxx, maxy);
+                bbox[3] = Point_2(minx, maxy);
+            }
+
+            FT compute_bbox_area(const Points_2 &bbox) const {
+
+                const FT width  = static_cast<FT>(CGAL::sqrt(CGAL::to_double(squared_distance_2(bbox[0], bbox[1]))));
+                const FT height = static_cast<FT>(CGAL::sqrt(CGAL::to_double(squared_distance_2(bbox[1], bbox[2]))));
+
+                return width * height;
+            }
+
+            /*
+            void compute_barycentre(const Polygon &polygon, Point_2 &b) const {
+
+                CGAL_precondition(polygon.size() > 2);
+                FT x = FT(0), y = FT(0);
+
+                for (size_t i = 0; i < polygon.size(); ++i) {
+                    const Point_2 &p = polygon.vertex(i);
+
+                    x += p.x();
+                    y += p.y();
+                }
+
+                x /= static_cast<FT>(polygon.size());
+                y /= static_cast<FT>(polygon.size());
+
+                b = Point_2(x, y);
+            }
+
+            void compute_barycentre(const Points_2 &queries, const Indices &tmp, Point_2 &b) const {
+
+                CGAL_precondition(tmp.size() != 0);
+                FT x = FT(0), y = FT(0);
+
+                for (size_t i = 0; i < tmp.size(); ++i) {
+                    const Point_2 &p = queries[tmp[i]];
+
+                    x += p.x();
+                    y += p.y();
+                }
+
+                x /= static_cast<FT>(tmp.size());
+                y /= static_cast<FT>(tmp.size());
+
+                b = Point_2(x, y);
+            }
+
+            void find_furthest_vertex(const Polygon &polygon, const Point_2 &q, Point_2 &b) const {
+
+                CGAL_precondition(polygon.size() > 2);
+                
+                int index = -1; FT max_distance = -m_big_value;
+                for (int i = 0; i < polygon.size(); ++i) {
+                    
+                    const Point_2 &p = polygon.vertex(i);
+                    const FT distance = static_cast<FT>(CGAL::sqrt(CGAL::to_double(squared_distance_2(p, q))));
+
+                    if (distance > max_distance) {
+
+                        index = i;
+                        max_distance = distance;
+                    }
+                }
+
+                CGAL_postcondition(index >= 0);
+                b = polygon.vertex(index);
+            } */
+
+            FT compute_extra_quality(const Indices &closest, const Indices &internal) const {
+
+                CGAL_precondition(internal.size() <= closest.size());
+
+                const FT closest_size  = static_cast<FT>(closest.size());
+                const FT internal_size = static_cast<FT>(internal.size());
+
+                const FT quality = internal_size / closest_size;
+                const FT extra_quality = get_quality(quality);
+
+                return extra_quality;
+            }
+
+            FT compute_final_quality(const FT initial_quality, const FT extra_quality) const {
+
+                CGAL_precondition(initial_quality >= FT(0) && initial_quality <= FT(1));
+                CGAL_precondition(extra_quality   >= FT(0) && extra_quality   <= FT(1));
+
+                const FT final_quality = CGAL::max(initial_quality, extra_quality);
+                return final_quality;
             }
 
             void find_neighbours(const Polyhedrons &polyhedrons, const Polyhedron_facets &facets, const Polyhedron_vertices &vertices, 
@@ -568,4 +888,4 @@ namespace CGAL {
 
 } // CGAL
 
-#endif // CGAL_LEVEL_OF_DETAIL_WEIGHT_QUALITY_POLYHEDRON_ESTIMATOR_STEP_10_H
+#endif // CGAL_LEVEL_OF_DETAIL_WEIGHT_QUALITY_POLYHEDRON_ESTIMATOR_STEP_11_H

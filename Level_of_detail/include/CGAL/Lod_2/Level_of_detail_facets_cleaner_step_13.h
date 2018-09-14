@@ -1,5 +1,5 @@
-#ifndef CGAL_LEVEL_OF_DETAIL_FACETS_CLEANER_STEP_12_H
-#define CGAL_LEVEL_OF_DETAIL_FACETS_CLEANER_STEP_12_H
+#ifndef CGAL_LEVEL_OF_DETAIL_FACETS_CLEANER_STEP_13_H
+#define CGAL_LEVEL_OF_DETAIL_FACETS_CLEANER_STEP_13_H
 
 // STL includes.
 #include <vector>
@@ -13,7 +13,7 @@ namespace CGAL {
 	namespace LOD {
 
 		template<class InputKernel, class InputBuilding, class InputBuildings>
-		class Level_of_detail_facets_cleaner_step_12 {
+		class Level_of_detail_facets_cleaner_step_13 {
             
         public:
             typedef InputKernel    Kernel;
@@ -37,7 +37,7 @@ namespace CGAL {
 
             using Output_regions = typename Building::Output_regions;
 
-            Level_of_detail_facets_cleaner_step_12(Buildings &buildings) :
+            Level_of_detail_facets_cleaner_step_13(Buildings &buildings) :
             m_buildings(buildings),
             m_tolerance(FT(1) / FT(100000))
             { }
@@ -148,4 +148,4 @@ namespace CGAL {
 
 } // CGAL
 
-#endif // CGAL_LEVEL_OF_DETAIL_FACETS_CLEANER_STEP_12_H
+#endif // CGAL_LEVEL_OF_DETAIL_FACETS_CLEANER_STEP_13_H

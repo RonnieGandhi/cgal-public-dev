@@ -1,5 +1,5 @@
-#ifndef CGAL_LEVEL_OF_DETAIL_COPLANAR_WALLS_DETECTOR_STEP_5_H
-#define CGAL_LEVEL_OF_DETAIL_COPLANAR_WALLS_DETECTOR_STEP_5_H
+#ifndef CGAL_LEVEL_OF_DETAIL_COPLANAR_WALLS_DETECTOR_STEP_6_H
+#define CGAL_LEVEL_OF_DETAIL_COPLANAR_WALLS_DETECTOR_STEP_6_H
 
 // STL includes.
 #include <vector>
@@ -16,7 +16,7 @@ namespace CGAL {
 	namespace LOD {
 
 		template<class InputKernel, class InputBuilding, class InputBuildings>
-		class Level_of_detail_coplanar_walls_detector_step_5 {
+		class Level_of_detail_coplanar_walls_detector_step_6 {
             
         public:
             typedef InputKernel    Kernel;
@@ -32,7 +32,7 @@ namespace CGAL {
             using Input_facets   = typename Facets_based_region_growing::Input_facets;
             using Output_regions = typename Facets_based_region_growing::Output_regions;
 			
-            Level_of_detail_coplanar_walls_detector_step_5(Buildings &buildings) :
+            Level_of_detail_coplanar_walls_detector_step_6(Buildings &buildings) :
             m_buildings(buildings)
             { }
 
@@ -78,4 +78,4 @@ namespace CGAL {
 
 } // CGAL
 
-#endif // CGAL_LEVEL_OF_DETAIL_COPLANAR_WALLS_DETECTOR_STEP_5_H
+#endif // CGAL_LEVEL_OF_DETAIL_COPLANAR_WALLS_DETECTOR_STEP_6_H

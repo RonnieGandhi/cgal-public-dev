@@ -141,6 +141,7 @@ namespace CGAL {
 			typedef typename Traits::Graphcut_3    Graphcut_3;
 
 			typedef typename Traits::Initial_roofs_estimator 	 			   Initial_roofs_estimator;
+			typedef typename Traits::Initial_roofs_regularizer				   Initial_roofs_regularizer;
 			typedef typename Traits::Initial_walls_estimator 	 			   Initial_walls_estimator;
 			typedef typename Traits::Coplanar_walls_detector 	 			   Coplanar_walls_detector;
 			typedef typename Traits::Coplanar_walls_merger   	 			   Coplanar_walls_merger;
@@ -150,6 +151,7 @@ namespace CGAL {
 			typedef typename Traits::Facets_cleaner 						   Facets_cleaner;
 			typedef typename Traits::Coplanar_facets_merger   	 			   Coplanar_facets_merger;
 
+			typedef typename Traits::Triangulation_based_boundary_extractor Triangulation_based_boundary_extractor;
 
 			// Extra typedefs.
 			using Plane_iterator = typename Planes::const_iterator;
@@ -814,7 +816,21 @@ namespace CGAL {
 
 				Log points_exporter;
 				if (!m_silent && !boundary_clutter_projected.empty())
-					points_exporter.export_projected_points_as_xyz("tmp" + std::string(PSR) + "lod_0_1" + std::string(PSR) + "projected_clutter", boundary_clutter_projected, m_default_path);
+					points_exporter.export_projected_points_as_xyz("tmp" + std::string(PSR) + "lod_0_1" + std::string(PSR) + "0_projected_clutter", boundary_clutter_projected, m_default_path);
+			}
+
+			void applying_boundary_extraction(Projected_points &boundary_clutter_projected, 
+			const Indices &building_boundary_idxs, const Indices &building_interior_idxs, const Container_3D &input, const size_t exec_step) {
+
+				// Extra: apply a better boundary extraction.
+				std::cout << "(" << exec_step << ") extracting better boundaries; " << std::endl;
+
+				Triangulation_based_boundary_extractor extractor = Triangulation_based_boundary_extractor(input, building_boundary_idxs, building_interior_idxs);
+				extractor.extract(boundary_clutter_projected);
+
+				Log points_exporter;
+				if (!m_silent && !boundary_clutter_projected.empty())
+					points_exporter.export_projected_points_as_xyz("tmp" + std::string(PSR) + "lod_0_1" + std::string(PSR) + "1_better_boundaries", boundary_clutter_projected, m_default_path);
 			}
 
 			void applying_grid_simplification(Projected_points &boundary_clutter_projected, const size_t exec_step) {
@@ -1376,6 +1392,19 @@ namespace CGAL {
 				}
 			}
 
+			void regularizing_kinetic_input_roofs(Buildings &buildings, const size_t exec_step) {
+				
+				// Regularize input roofs.
+				std::cout << "(" << exec_step << ") regularizing kinetic input roofs;" << std::endl;
+
+				Initial_roofs_regularizer initial_roofs_regularizer = Initial_roofs_regularizer(buildings);
+				initial_roofs_regularizer.regularize();
+
+				if (!m_silent) {
+					Log exporter; exporter.save_building_roofs_without_faces(buildings, "tmp" + std::string(PSR) + "lod_2" + std::string(PSR) + "4_regularized_roofs", true);
+				}
+			}
+
 			void estimating_kinetic_input_walls(const FT ground_height, Buildings &buildings, const size_t exec_step) {
 				
 				// Estimate input walls.
@@ -1385,7 +1414,7 @@ namespace CGAL {
 				initial_walls_estimator.estimate();
 
 				if (!m_silent) {
-					Log exporter; exporter.save_building_walls(buildings, "tmp" + std::string(PSR) + "lod_2" + std::string(PSR) + "4_initial_walls", true);
+					Log exporter; exporter.save_building_walls(buildings, "tmp" + std::string(PSR) + "lod_2" + std::string(PSR) + "5_initial_walls", true);
 				}
 			}
 
@@ -1398,7 +1427,7 @@ namespace CGAL {
 				coplanar_walls_detector.detect();
 
 				if (!m_silent) {
-					Log exporter; exporter.save_facets_based_region_growing(buildings, "tmp" + std::string(PSR) + "lod_2" + std::string(PSR) + "5_coplanar_walls");
+					Log exporter; exporter.save_facets_based_region_growing(buildings, "tmp" + std::string(PSR) + "lod_2" + std::string(PSR) + "6_coplanar_walls");
 				}
 			}
 
@@ -1411,7 +1440,7 @@ namespace CGAL {
 				coplanar_walls_merger.merge();
 
 				if (!m_silent) {
-					Log exporter; exporter.save_building_walls(buildings, "tmp" + std::string(PSR) + "lod_2" + std::string(PSR) + "6_merged_walls", true);
+					Log exporter; exporter.save_building_walls(buildings, "tmp" + std::string(PSR) + "lod_2" + std::string(PSR) + "7_merged_walls", true);
 				}
 			}
 
@@ -1429,7 +1458,7 @@ namespace CGAL {
 				m_kinetic_partition_input_creator->create();
 
 				if (!m_silent) {
-					Log exporter; exporter.save_convex_polygons(buildings, "tmp" + std::string(PSR) + "lod_2" + std::string(PSR) + "7_kinetic_partitioning_input");
+					Log exporter; exporter.save_convex_polygons(buildings, "tmp" + std::string(PSR) + "lod_2" + std::string(PSR) + "8_kinetic_partitioning_input");
 				}
 			}
 
@@ -1442,7 +1471,7 @@ namespace CGAL {
 				m_kinetic_partition_output_creator->create();
 
 				if (!m_silent) {
-					Log exporter; exporter.save_polyhedrons(buildings, "tmp" + std::string(PSR) + "lod_2" + std::string(PSR) + "8_kinetic_partitioning_polyhedrons");
+					Log exporter; exporter.save_polyhedrons(buildings, "tmp" + std::string(PSR) + "lod_2" + std::string(PSR) + "9_kinetic_partitioning_polyhedrons");
 				}
 			}
 
@@ -1457,7 +1486,7 @@ namespace CGAL {
 				if (!m_silent) {
 					
 					Log exporter;
-					exporter.save_polyhedrons(buildings, "tmp" + std::string(PSR) + "lod_2" + std::string(PSR) + "9_polyhedron_in_out_estimation");
+					exporter.save_polyhedrons(buildings, "tmp" + std::string(PSR) + "lod_2" + std::string(PSR) + "10_polyhedron_in_out_estimation");
 				}
 			}
 
@@ -1472,7 +1501,7 @@ namespace CGAL {
 				if (!m_silent) {
 					
 					Log exporter;
-					exporter.save_graphcut_facets(buildings, "tmp" + std::string(PSR) + "lod_2" + std::string(PSR) + "10_polyhedron_facets_estimation");
+					exporter.save_graphcut_facets(buildings, "tmp" + std::string(PSR) + "lod_2" + std::string(PSR) + "11_polyhedron_facets_estimation");
 				}
 			}
 
@@ -1486,7 +1515,7 @@ namespace CGAL {
 				graphcut_3.solve(buildings);
 
 				Log exporter;
-				if (!m_silent) exporter.save_polyhedrons(buildings, "tmp" + std::string(PSR) + "lod_2" + std::string(PSR) + "11_graphcut");
+				if (!m_silent) exporter.save_polyhedrons(buildings, "tmp" + std::string(PSR) + "lod_2" + std::string(PSR) + "12_graphcut");
 			}
 
 			void creating_clean_facets(Buildings &buildings, const size_t exec_step) {
@@ -1498,7 +1527,7 @@ namespace CGAL {
 				facets_cleaner.create_clean_facets();
 
 				if (!m_silent) {
-					Log exporter; exporter.save_clean_facets(buildings, "tmp" + std::string(PSR) + "lod_2" + std::string(PSR) + "12_clean_facets");
+					Log exporter; exporter.save_clean_facets(buildings, "tmp" + std::string(PSR) + "lod_2" + std::string(PSR) + "13_clean_facets");
 				}
 			}
 
@@ -1511,7 +1540,7 @@ namespace CGAL {
 				coplanar_facets_detector.detect();
 
 				if (!m_silent) {
-					Log exporter; exporter.save_facets_based_region_growing(buildings, "tmp" + std::string(PSR) + "lod_2" + std::string(PSR) + "13_coplanar_facets");
+					Log exporter; exporter.save_facets_based_region_growing(buildings, "tmp" + std::string(PSR) + "lod_2" + std::string(PSR) + "14_coplanar_facets");
 				}
 			}
 
@@ -1524,7 +1553,7 @@ namespace CGAL {
 				coplanar_facets_merger.merge();
 
 				if (!m_silent) {
-					Log exporter; exporter.save_clean_facets(buildings, "tmp" + std::string(PSR) + "lod_2" + std::string(PSR) + "14_merged_facets");
+					Log exporter; exporter.save_clean_facets(buildings, "tmp" + std::string(PSR) + "lod_2" + std::string(PSR) + "15_merged_facets");
 				}
 			}
 
@@ -1617,6 +1646,13 @@ namespace CGAL {
 				// (04) ----------------------------------
 				Projected_points boundary_clutter_projected;
 				projecting(boundary_clutter_projected, base_ground_plane, boundary_clutter, input, ++exec_step);
+
+
+				if (true) {
+
+					// (04) ----------------------------------
+					applying_boundary_extraction(boundary_clutter_projected, building_boundary_idxs, building_interior_idxs, input, ++exec_step);
+				}
 
 
 				// (05) ----------------------------------
@@ -1748,52 +1784,54 @@ namespace CGAL {
 
 
 				// (04) ----------------------------------
-				estimating_kinetic_input_walls(ground_height, buildings, ++exec_step);
+				regularizing_kinetic_input_roofs(buildings, ++exec_step);
 
 
 				// (05) ----------------------------------
+				estimating_kinetic_input_walls(ground_height, buildings, ++exec_step);
+
+
+				// (06) ----------------------------------
 				searching_for_coplanar_input_walls(buildings, ++exec_step);
 
 				
-				// (06) ----------------------------------
+				// (07) ----------------------------------
 				merging_coplanar_input_walls(buildings, ++exec_step);
 
 
-				// (07) ----------------------------------
+				// (08) ----------------------------------
 				creating_3d_partitioning_input(ground_height, buildings, ++exec_step);
 
 
-				// (08) ----------------------------------
+				// (09) ----------------------------------
 				creating_3d_partitioning_output(buildings, ++exec_step);
 
 
-				// (09) ----------------------------------
+				// (10) ----------------------------------
 				estimating_in_out_polyhedron_labels(input, ground_height, buildings, ++exec_step);
 
 
-				// (10) ----------------------------------
+				// (11) ----------------------------------
 				estimating_polyhedron_facet_weights_and_quality(input, ground_height, buildings, ++exec_step);
 
-				return;
 
-
-				// (11) ----------------------------------
+				// (12) ----------------------------------
 				applying_graphcut_3(buildings, ++exec_step);
 
 				
-				// (12) ----------------------------------
+				// (13) ----------------------------------
 				creating_clean_facets(buildings, ++exec_step);
 
 
-				// (13) ----------------------------------
+				// (14) ----------------------------------
 				searching_for_coplanar_facets(buildings, ++exec_step);
 
 
-				// (14) ----------------------------------
+				// (15) ----------------------------------
 				merging_coplanar_facets(buildings, ++exec_step);
 
 
-				// (15) ----------------------------------
+				// (16) ----------------------------------
 				reconstructing_lod2(cdt, buildings, ground_bbox, ground_height, mesh_2, mesh_facet_colors_2, "LOD2", ++exec_step);
 			}
 

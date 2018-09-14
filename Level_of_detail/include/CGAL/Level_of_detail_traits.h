@@ -29,6 +29,7 @@
 #include <CGAL/Regularizer/Level_of_detail_vertical_regularizer.h>
 #include <CGAL/Regularizer/Level_of_detail_line_regularizer_jean_philippe.h>
 #include <CGAL/Regularizer/Segment_regularizer_2/Level_of_detail_segment_regularizer_2.h>
+#include <CGAL/Preprocessor/Level_of_detail_triangulation_based_boundary_extractor.h>
 #include <CGAL/Regularizer/Level_of_detail_polygonizer_jean_philippe.h>
 #include <CGAL/Structuring_2/Level_of_detail_structuring_2.h>
 #include <CGAL/Visibility_2/Level_of_detail_visibility_2.h>
@@ -54,18 +55,19 @@
 #include <CGAL/Lod_2/Level_of_detail_region_growing_step_1.h>
 #include <CGAL/Lod_2/Level_of_detail_cleaner_step_2.h>
 #include <CGAL/Lod_2/Level_of_detail_roofs_estimator_step_3.h>
-#include <CGAL/Lod_2/Level_of_detail_walls_estimator_step_4.h>
-#include <CGAL/Lod_2/Level_of_detail_coplanar_walls_detector_step_5.h>
-#include <CGAL/Lod_2/Level_of_detail_coplanar_walls_merger_step_6.h>
-#include <CGAL/Lod_2/Level_of_detail_kinetic_partition_input_creator_step_7.h>
-#include <CGAL/Lod_2/Level_of_detail_kinetic_partition_output_creator_step_8.h>
-#include <CGAL/Lod_2/Level_of_detail_in_out_polyhedron_estimator_step_9.h>
-#include <CGAL/Lod_2/Level_of_detail_weight_quality_polyhedron_estimator_step_10.h>
-#include <CGAL/Lod_2/Level_of_detail_graphcut_step_11.h>
-#include <CGAL/Lod_2/Level_of_detail_facets_cleaner_step_12.h>
-#include <CGAL/Lod_2/Level_of_detail_coplanar_facets_detector_step_13.h>
-#include <CGAL/Lod_2/Level_of_detail_coplanar_facets_merger_step_14.h>
-#include <CGAL/Lod_2/Level_of_detail_lod2_from_kinetic_reconstruction_step_15.h>
+#include <CGAL/Lod_2/Level_of_detail_roofs_regularizer_step_4.h>
+#include <CGAL/Lod_2/Level_of_detail_walls_estimator_step_5.h>
+#include <CGAL/Lod_2/Level_of_detail_coplanar_walls_detector_step_6.h>
+#include <CGAL/Lod_2/Level_of_detail_coplanar_walls_merger_step_7.h>
+#include <CGAL/Lod_2/Level_of_detail_kinetic_partition_input_creator_step_8.h>
+#include <CGAL/Lod_2/Level_of_detail_kinetic_partition_output_creator_step_9.h>
+#include <CGAL/Lod_2/Level_of_detail_in_out_polyhedron_estimator_step_10.h>
+#include <CGAL/Lod_2/Level_of_detail_weight_quality_polyhedron_estimator_step_11.h>
+#include <CGAL/Lod_2/Level_of_detail_graphcut_step_12.h>
+#include <CGAL/Lod_2/Level_of_detail_facets_cleaner_step_13.h>
+#include <CGAL/Lod_2/Level_of_detail_coplanar_facets_detector_step_14.h>
+#include <CGAL/Lod_2/Level_of_detail_coplanar_facets_merger_step_15.h>
+#include <CGAL/Lod_2/Level_of_detail_lod2_from_kinetic_reconstruction_step_16.h>
 
 namespace CGAL {
 
@@ -188,18 +190,21 @@ namespace CGAL {
 			typedef CGAL::LOD::Level_of_detail_region_growing_step_1<Kernel, Container_3D, CDT, Buildings> 		  	  		 		  Region_growing_3;
 			typedef CGAL::LOD::Level_of_detail_cleaner_step_2<Kernel, Container_3D, CDT, Buildings> 		  		  		 		  Roof_cleaner;
 			typedef CGAL::LOD::Level_of_detail_roofs_estimator_step_3<Kernel, Container_3D, Building, Buildings> 	  		 		  Initial_roofs_estimator;
-			typedef CGAL::LOD::Level_of_detail_walls_estimator_step_4<Kernel, Building, Buildings> 	  				  		 		  Initial_walls_estimator;
-			typedef CGAL::LOD::Level_of_detail_coplanar_walls_detector_step_5<Kernel, Building, Buildings> 	  		  		 		  Coplanar_walls_detector;
-			typedef CGAL::LOD::Level_of_detail_coplanar_walls_merger_step_6<Kernel, Building, Buildings> 	  		  		 		  Coplanar_walls_merger;
-			typedef CGAL::LOD::Level_of_detail_kinetic_partition_input_creator_step_7<Kernel, Building, Buildings>    		 		  Kinetic_partition_input_creator;
-			typedef CGAL::LOD::Level_of_detail_kinetic_partition_output_creator_step_8<Kernel, Building, Buildings>   		 		  Kinetic_partition_output_creator;
-			typedef CGAL::LOD::Level_of_detail_in_out_polyhedron_estimator_step_9<Kernel, Container_3D, Building, Buildings> 		  In_out_polyhedron_estimator;
-			typedef CGAL::LOD::Level_of_detail_weight_quality_polyhedron_estimator_step_10<Kernel, Container_3D, Building, Buildings> Polyhedron_facet_weight_quality_estimator;
-			typedef CGAL::LOD::Level_of_detail_graphcut_step_11<Kernel, Building, Buildings> 										  Graphcut_3;
-			typedef CGAL::LOD::Level_of_detail_facets_cleaner_step_12<Kernel, Building, Buildings> 		     						  Facets_cleaner;
-			typedef CGAL::LOD::Level_of_detail_coplanar_facets_detector_step_13<Kernel, Building, Buildings> 	  		  		 	  Coplanar_facets_detector;
-			typedef CGAL::LOD::Level_of_detail_coplanar_facets_merger_step_14<Kernel, Building, Buildings> 	  		  		 		  Coplanar_facets_merger;
-			typedef CGAL::LOD::Level_of_detail_lod2_from_kinetic_reconstruction_step_15<Kernel, CDT, Building, Buildings, Mesh> 	  Kinetic_LOD2_reconstruction;
+			typedef CGAL::LOD::Level_of_detail_roofs_regularizer_step_4<Kernel, Building, Buildings> 	  		 		  			  Initial_roofs_regularizer;
+			typedef CGAL::LOD::Level_of_detail_walls_estimator_step_5<Kernel, Building, Buildings> 	  				  		 		  Initial_walls_estimator;
+			typedef CGAL::LOD::Level_of_detail_coplanar_walls_detector_step_6<Kernel, Building, Buildings> 	  		  		 		  Coplanar_walls_detector;
+			typedef CGAL::LOD::Level_of_detail_coplanar_walls_merger_step_7<Kernel, Building, Buildings> 	  		  		 		  Coplanar_walls_merger;
+			typedef CGAL::LOD::Level_of_detail_kinetic_partition_input_creator_step_8<Kernel, Building, Buildings>    		 		  Kinetic_partition_input_creator;
+			typedef CGAL::LOD::Level_of_detail_kinetic_partition_output_creator_step_9<Kernel, Building, Buildings>   		 		  Kinetic_partition_output_creator;
+			typedef CGAL::LOD::Level_of_detail_in_out_polyhedron_estimator_step_10<Kernel, Container_3D, Building, Buildings> 		  In_out_polyhedron_estimator;
+			typedef CGAL::LOD::Level_of_detail_weight_quality_polyhedron_estimator_step_11<Kernel, Container_3D, Building, Buildings> Polyhedron_facet_weight_quality_estimator;
+			typedef CGAL::LOD::Level_of_detail_graphcut_step_12<Kernel, Building, Buildings> 										  Graphcut_3;
+			typedef CGAL::LOD::Level_of_detail_facets_cleaner_step_13<Kernel, Building, Buildings> 		     						  Facets_cleaner;
+			typedef CGAL::LOD::Level_of_detail_coplanar_facets_detector_step_14<Kernel, Building, Buildings> 	  		  		 	  Coplanar_facets_detector;
+			typedef CGAL::LOD::Level_of_detail_coplanar_facets_merger_step_15<Kernel, Building, Buildings> 	  		  		 		  Coplanar_facets_merger;
+			typedef CGAL::LOD::Level_of_detail_lod2_from_kinetic_reconstruction_step_16<Kernel, CDT, Building, Buildings, Mesh> 	  Kinetic_LOD2_reconstruction;
+
+			typedef CGAL::LOD::Level_of_detail_triangulation_based_boundary_extractor<Kernel, Container_3D> Triangulation_based_boundary_extractor;
 		};
 	}
 }

@@ -182,6 +182,7 @@ namespace CGAL {
 					const auto &polyhedrons = building.polyhedrons;
 
 					for (size_t i = 0; i < facets.size(); ++i) {
+						if (!facets[i].is_valid) continue;
 
 						num_vertices += polyhedrons[facets[i].data.first].facets[facets[i].data.second].indices.size();
 						num_facets   += 1; 
@@ -211,6 +212,7 @@ namespace CGAL {
 					const auto &polyhedrons = building.polyhedrons;
 
 					for (size_t i = 0; i < facets.size(); ++i) {
+						if (!facets[i].is_valid) continue;
 
 						const size_t n = polyhedrons[facets[i].data.first].facets[facets[i].data.second].indices.size();
 						for (size_t j = 0; j < n; ++j) {
@@ -231,6 +233,8 @@ namespace CGAL {
 					const auto &polyhedrons = building.polyhedrons;
 
 					for (size_t i = 0; i < facets.size(); ++i) {
+						if (!facets[i].is_valid) continue;
+						
 						const Color color = generate_random_color();
 
 						const size_t n = polyhedrons[facets[i].data.first].facets[facets[i].data.second].indices.size();

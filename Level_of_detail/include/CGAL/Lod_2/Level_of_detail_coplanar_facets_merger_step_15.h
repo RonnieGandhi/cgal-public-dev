@@ -1,5 +1,5 @@
-#ifndef CGAL_LEVEL_OF_DETAIL_COPLANAR_FACETS_MERGER_STEP_14_H
-#define CGAL_LEVEL_OF_DETAIL_COPLANAR_FACETS_MERGER_STEP_14_H
+#ifndef CGAL_LEVEL_OF_DETAIL_COPLANAR_FACETS_MERGER_STEP_15_H
+#define CGAL_LEVEL_OF_DETAIL_COPLANAR_FACETS_MERGER_STEP_15_H
 
 // STL includes.
 #include <vector>
@@ -16,7 +16,7 @@ namespace CGAL {
 	namespace LOD {
 
 		template<class InputKernel, class InputBuilding, class InputBuildings>
-		class Level_of_detail_coplanar_facets_merger_step_14 {
+		class Level_of_detail_coplanar_facets_merger_step_15 {
             
         public:
             typedef InputKernel    Kernel;
@@ -29,7 +29,7 @@ namespace CGAL {
 
             using Facet_regions_merger = Level_of_detail_facet_regions_merger_3<Kernel, Building>;
 			
-            Level_of_detail_coplanar_facets_merger_step_14(Buildings &buildings) :
+            Level_of_detail_coplanar_facets_merger_step_15(Buildings &buildings) :
             m_buildings(buildings)
             { }
 
@@ -68,4 +68,4 @@ namespace CGAL {
 
 } // CGAL
 
-#endif // CGAL_LEVEL_OF_DETAIL_COPLANAR_FACETS_MERGER_STEP_14_H
+#endif // CGAL_LEVEL_OF_DETAIL_COPLANAR_FACETS_MERGER_STEP_15_H
