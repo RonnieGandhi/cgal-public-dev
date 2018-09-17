@@ -829,7 +829,7 @@ namespace CGAL {
 				extractor.extract(boundary_clutter_projected);
 
 				Log points_exporter;
-				if (!m_silent && !boundary_clutter_projected.empty())
+				if (!m_silent)
 					points_exporter.export_projected_points_as_xyz("tmp" + std::string(PSR) + "lod_0_1" + std::string(PSR) + "1_better_boundaries", boundary_clutter_projected, m_default_path);
 			}
 

@@ -130,8 +130,8 @@ namespace CGAL {
 
             bool compute_source_normal(const Region_facets &region_facets, Vector_3 &normal) const {
                 
-                CGAL_precondition(region_facets.size() > 0);
-                if (region_facets.size() == 0) return false;
+                if (region_facets.size() == 0) 
+                    return false;
 
                 Vector_3 tmp_normal; 
                 FT x = FT(0), y = FT(0), z = FT(0);

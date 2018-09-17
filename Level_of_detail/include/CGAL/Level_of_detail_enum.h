@@ -97,6 +97,7 @@ namespace CGAL {
 			Label label = Label::CLUTTER;
 			CGAL::Color color = CGAL::Color(0, 0, 0);
 			FT height = -FT(100000000000000);
+			int index = -1;
 		};
 
 		// Building structure.
@@ -123,6 +124,9 @@ namespace CGAL {
 			FT roofs_max_height = FT(0); // max height among all roof points
 
 			FT max_height = -FT(1);
+
+			using Roof_planes = std::vector<Plane_3>;
+			Roof_planes roof_planes;
 
 			struct Roof {
 				

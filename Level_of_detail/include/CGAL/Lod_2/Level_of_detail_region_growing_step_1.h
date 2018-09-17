@@ -20,6 +20,7 @@
 #include <CGAL/Lod_2/Region_growing_simon_3/Shape_base.h>
 #include <CGAL/Lod_2/Region_growing_simon_3/Region_growing.h>
 #include <CGAL/Lod_2/Region_growing_simon_3/Shape_detection_traits.h>
+#include <CGAL/Lod_2/Region_growing_simon_3/regularize_planes.h>
 
 namespace CGAL {
 
@@ -40,6 +41,7 @@ namespace CGAL {
             using FT       = typename Kernel::FT;
             using Point_3  = typename Kernel::Point_3;
             using Vector_3 = typename Kernel::Vector_3;
+            using Plane_3  = typename Kernel::Plane_3;
 
             using Vertex_handle   = typename CDT::Vertex_handle;
             using Face_handle     = typename CDT::Face_handle;
@@ -57,13 +59,18 @@ namespace CGAL {
             using Point_map  = typename Point_set::Point_map;
             using Vector_map = typename Point_set::Vector_map;
 
-            using Traits         = CGAL::Shape_detection_simon_3::Shape_detection_traits<Local_kernel, Point_set, Point_map, Vector_map>;
-            using Region_growing = CGAL::Shape_detection_simon_3::Region_growing<Traits>;
-            using Plane          = CGAL::Shape_detection_simon_3::Plane<Traits>;
+            using Traits             = CGAL::Shape_detection_simon_3::Shape_detection_traits<Local_kernel, Point_set, Point_map, Vector_map>;
+            using Region_growing     = CGAL::Shape_detection_simon_3::Region_growing<Traits>;
+            using Plane              = CGAL::Shape_detection_simon_3::Plane<Traits>;
+            using Plane_map          = CGAL::Shape_detection_simon_3::Plane_map<Traits>;
+            using Point_to_plane_map = CGAL::Shape_detection_simon_3::Point_to_shape_index_map<Traits>;
 
             using Parameters     = typename CGAL::Shape_detection_simon_3::Region_growing<Traits>::Parameters;
+            
             using Shape_iterator = typename Region_growing::Shape_range::iterator;
             using Shape          = typename Region_growing::Shape;
+            using Planes         = typename Region_growing::Plane_range;
+            
             using Index_iterator = std::vector<size_t>::const_iterator;
 
             Level_of_detail_region_growing_step_1(const Input &input) :
@@ -71,7 +78,8 @@ namespace CGAL {
             m_epsilon(-FT(1)),
 			m_cluster_epsilon(-FT(1)),
 			m_normal_threshold(-FT(1)),
-			m_min_points(0) 
+			m_min_points(0),
+            m_regularize(true)
             { }
 
             void detect(Buildings &buildings) const {
@@ -115,6 +123,8 @@ namespace CGAL {
             FT m_cluster_epsilon;
             FT m_normal_threshold;
             size_t m_min_points;
+
+            const bool m_regularize;
 
             void grow_regions(Building &building) const {
 
@@ -170,6 +180,8 @@ namespace CGAL {
                 set_parameters(parameters);
 
                 region_growing.detect(parameters);
+                if (m_regularize) regularize_shapes(points, region_growing, building);
+
                 set_shapes_to_building(region_growing, indices, building);
             }
 
@@ -179,6 +191,23 @@ namespace CGAL {
                 parameters.cluster_epsilon  = CGAL::to_double(m_cluster_epsilon);
                 parameters.normal_threshold = CGAL::to_double(m_normal_threshold);
                 parameters.min_points       = m_min_points * 6;
+            }
+
+            void regularize_shapes(Point_set &points, Region_growing &region_growing, Building &building) const {
+
+                Planes planes = region_growing.planes();
+                CGAL::Shape_detection_simon_3::regularize_planes(points, points.point_map(), planes, Plane_map(), Point_to_plane_map(points, planes), true, true, true, true, 10);
+                set_planes_to_building(planes, building);
+            }
+
+            void set_planes_to_building(const Planes &planes, Building &building) const {
+
+                building.roof_planes.clear();
+                for (size_t i = 0; i < planes.size(); ++i) {
+                    
+                    const auto plane = get(Plane_map(), *(planes.begin() + i));
+                    building.roof_planes.push_back(Plane_3(plane.a(), plane.b(), plane.c(), plane.d()));
+                }
             }
 
             void set_shapes_to_building(const Region_growing &region_growing, const Indices &indices, Building &building) const {
