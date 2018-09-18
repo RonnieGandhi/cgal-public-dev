@@ -23,6 +23,7 @@
 #include <CGAL/license/Point_set_shape_detection_3.h>
 
 #include <CGAL/Lod_2/Region_growing_simon_3/Plane.h>
+#include <CGAL/Lod_2/Roofs_estimator/Level_of_detail_roofs_eigen_diagonalize_traits.h>
 
 #include <CGAL/Orthogonal_k_neighbor_search.h>
 #include <CGAL/Fuzzy_sphere.h>
@@ -64,6 +65,8 @@ shape. The implementation follows \cgalCite{cgal:lm-clscm-12}.
     typedef typename Traits::Vector_3 Vector; ///< vector type.
     typedef typename Traits::Plane_3 Plane; ///< plane type.
     /// \endcond
+
+    using Diagonalize_traits = CGAL::LOD::Roofs_eigen_diagonalize_traits<FT, 3>;
 
     typedef typename Traits::Input_range Input_range;
     ///< Model of the concept `Range` with random access iterators, providing input points and normals
@@ -233,6 +236,19 @@ shape. The implementation follows \cgalCite{cgal:lm-clscm-12}.
 
         (*nb_points)[idx] = neighbors.size();
         
+        Point centroid; FT cx = FT(0), cy = FT(0), cz = FT(0);
+        for (size_t i = 0; i < neighbors.size(); ++i) {
+          const Point &p = *boost::make_transform_iterator(neighbors.begin() + i, CGAL::Property_map_to_unary_function<My_point_map>(m_index_map));
+
+          cx += p.x();
+          cy += p.y();
+          cz += p.z();
+        }
+        cx /= static_cast<FT>(neighbors.size());
+        cy /= static_cast<FT>(neighbors.size());
+        cz /= static_cast<FT>(neighbors.size());
+        centroid = Point(cx, cy, cz);
+
         Plane dummy;
         (*score)[idx]
           = CGAL::linear_least_squares_fitting_3
@@ -241,7 +257,8 @@ shape. The implementation follows \cgalCite{cgal:lm-clscm-12}.
            boost::make_transform_iterator (neighbors.end(),
                                            CGAL::Property_map_to_unary_function<My_point_map>(m_index_map)),
            dummy,
-           CGAL::Dimension_tag<0>());
+           centroid,
+           CGAL::Dimension_tag<0>(), typename Traits::Kernel(), Diagonalize_traits());
       }
       
       bool operator() (const std::size_t& a, const std::size_t& b) const
@@ -536,7 +553,7 @@ shape. The implementation follows \cgalCite{cgal:lm-clscm-12}.
 
         m_shape_index[i] = class_index++;
         
-        int conti = 0; 	//for accelerate least_square fitting 
+        int conti = 0; 	// for accelerate least_square fitting 
 
         Vector plane_normal = get(m_normal_map, *it);
         plane_normal = plane_normal / std::sqrt(plane_normal * plane_normal);
@@ -544,7 +561,7 @@ shape. The implementation follows \cgalCite{cgal:lm-clscm-12}.
         Plane optimal_plane(get(m_point_map, *it),
                             plane_normal);
 
-        //initialization containers
+        // initialization containers
 
         index_container.clear();
         index_container.push_back(i);
@@ -554,7 +571,7 @@ shape. The implementation follows \cgalCite{cgal:lm-clscm-12}.
 
         index_container_current_ring.clear();
 
-        //propagation
+        // propagation
         bool propagation = true;
         do
         {
@@ -618,11 +635,27 @@ shape. The implementation follows \cgalCite{cgal:lm-clscm-12}.
                  icit != index_container.end(); ++ icit)
               listp.push_back(get (m_point_map, *(m_input_iterator_first + *icit)));
 
+            Point centroid; FT cx = FT(0), cy = FT(0), cz = FT(0);
+            for (auto lip = listp.begin(); lip != listp.end(); ++lip) {
+              const Point &p = *lip;
+
+              cx += p.x();
+              cy += p.y();
+              cz += p.z();
+            }
+            cx /= static_cast<FT>(listp.size());
+            cy /= static_cast<FT>(listp.size());
+            cz /= static_cast<FT>(listp.size());
+            centroid = Point(cx, cy, cz);
+
             Plane reajusted_plane;
             CGAL::linear_least_squares_fitting_3(listp.begin(),
                                                  listp.end(),
                                                  reajusted_plane,
-                                                 CGAL::Dimension_tag<0>());
+                                                 centroid,
+                                                 CGAL::Dimension_tag<0>(),
+                                                 typename Traits::Kernel(),
+                                                 Diagonalize_traits());
             optimal_plane = reajusted_plane;
             Vector previous = plane_normal;
             plane_normal = optimal_plane.orthogonal_vector();

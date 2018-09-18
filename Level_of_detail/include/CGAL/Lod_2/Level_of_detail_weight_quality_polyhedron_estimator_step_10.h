@@ -1,5 +1,5 @@
-#ifndef CGAL_LEVEL_OF_DETAIL_WEIGHT_QUALITY_POLYHEDRON_ESTIMATOR_STEP_11_H
-#define CGAL_LEVEL_OF_DETAIL_WEIGHT_QUALITY_POLYHEDRON_ESTIMATOR_STEP_11_H
+#ifndef CGAL_LEVEL_OF_DETAIL_WEIGHT_QUALITY_POLYHEDRON_ESTIMATOR_STEP_10_H
+#define CGAL_LEVEL_OF_DETAIL_WEIGHT_QUALITY_POLYHEDRON_ESTIMATOR_STEP_10_H
 
 // STL includes.
 #include <vector>
@@ -24,7 +24,7 @@ namespace CGAL {
 	namespace LOD {
 
 		template<class InputKernel, class InputContainer, class InputBuilding, class InputBuildings>
-		class Level_of_detail_weight_quality_polyhedron_estimator_step_11 {
+		class Level_of_detail_weight_quality_polyhedron_estimator_step_10 {
             
         public:
             using Kernel    = InputKernel;
@@ -84,7 +84,7 @@ namespace CGAL {
 
             using Log = CGAL::LOD::Mylog;
 
-            Level_of_detail_weight_quality_polyhedron_estimator_step_11(const Input &input, const FT ground_height, Buildings &buildings) :
+            Level_of_detail_weight_quality_polyhedron_estimator_step_10(const Input &input, const FT ground_height, Buildings &buildings) :
             m_input(input),
             m_buildings(buildings),
             m_ground_height(ground_height),
@@ -888,4 +888,4 @@ namespace CGAL {
 
 } // CGAL
 
-#endif // CGAL_LEVEL_OF_DETAIL_WEIGHT_QUALITY_POLYHEDRON_ESTIMATOR_STEP_11_H
+#endif // CGAL_LEVEL_OF_DETAIL_WEIGHT_QUALITY_POLYHEDRON_ESTIMATOR_STEP_10_H

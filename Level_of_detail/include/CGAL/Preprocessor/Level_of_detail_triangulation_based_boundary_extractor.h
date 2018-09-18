@@ -55,12 +55,12 @@ namespace CGAL {
             m_boundary_indices(boundary_indices),
             m_interior_indices(interior_indices),
             m_distance_threshold(FT(2)),
-            m_use_std_method(false)
+            m_use_std_method(false),
+            m_check_uniqueness(true)
             { }
 
             void extract(Projected_points &projected_points) const {
 
-                return;
                 if (m_boundary_indices.size() != 0) return;
 
                 CDT cdt;
@@ -78,6 +78,8 @@ namespace CGAL {
 
             const FT m_distance_threshold;
             const bool m_use_std_method;
+
+            const bool m_check_uniqueness;
 
             void create_cdt_and_queue(const Projected_points &projected_points, CDT &cdt, Queue &queue) const {
                 
@@ -228,11 +230,14 @@ namespace CGAL {
                 if (indices.size() == 0) 
                     return false;
 
-                for (size_t i = 0; i < indices.size(); ++i) {
-                    const Index index = indices[i];
+                if (m_check_uniqueness) {
 
-                    if (projected_points.find(index) != projected_points.end())
-                        return false;
+                    for (size_t i = 0; i < indices.size(); ++i) {
+                        const Index index = indices[i];
+
+                        if (projected_points.find(index) != projected_points.end())
+                            return false;
+                    }
                 }
                 return true;
             }

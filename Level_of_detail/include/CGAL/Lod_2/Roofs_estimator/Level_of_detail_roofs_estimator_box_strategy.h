@@ -71,7 +71,10 @@ namespace CGAL {
 				set_ground_normal(ground_normal);
 
 				FT angle_3d; Vector_3 axis;
-				compute_angle_and_axis(roof_normal, ground_normal, angle_3d, axis);
+				const bool success = compute_angle_and_axis(roof_normal, ground_normal, angle_3d, axis);
+
+				if (!success) 
+					return;
 				
 				if (angle_3d != FT(0)) 
 					rotate_points(angle_3d, axis, roof_points);
@@ -119,17 +122,21 @@ namespace CGAL {
 				n = ground.orthogonal_vector();
 			}
 
-            void compute_angle_and_axis(const Vector_3 &m, const Vector_3 &n, FT &angle, Vector_3 &axis) const {
+            bool compute_angle_and_axis(const Vector_3 &m, const Vector_3 &n, FT &angle, Vector_3 &axis) const {
 				
 				const auto  cross = cross_product_3(m, n);
 				const   FT length = static_cast<FT>(CGAL::sqrt(CGAL::to_double(squared_length_3(cross))));
 				const   FT    dot = dot_product_3(m, n);
 
 				angle = static_cast<FT>(std::atan2(CGAL::to_double(length), CGAL::to_double(dot)));
-				if (angle == FT(0)) return;
 				
+				if ( angle == FT(0)) return true;
+				if (length == FT(0)) return false;
+
 				CGAL_precondition(length != FT(0));
+				
 				axis = cross / length;
+				return true;
 			}
 
 			void rotate_points(const FT angle, const Vector_3 &axis, Points &points) const {

@@ -141,7 +141,6 @@ namespace CGAL {
 			typedef typename Traits::Graphcut_3    Graphcut_3;
 
 			typedef typename Traits::Initial_roofs_estimator 	 			   Initial_roofs_estimator;
-			typedef typename Traits::Initial_roofs_regularizer				   Initial_roofs_regularizer;
 			typedef typename Traits::Initial_walls_estimator 	 			   Initial_walls_estimator;
 			typedef typename Traits::Coplanar_walls_detector 	 			   Coplanar_walls_detector;
 			typedef typename Traits::Coplanar_walls_merger   	 			   Coplanar_walls_merger;
@@ -280,7 +279,10 @@ namespace CGAL {
 			m_roof_cleaner_use_thin_criteria(false),
 			m_quality_based_method(false),
 			m_simple_visibility_method(true),
-			m_advanced_visibility_method(false)
+			m_advanced_visibility_method(false), 
+			m_regularize_3d(false),
+			m_use_extra_boundary_extraction(false),
+			m_regularization_angle_3d(FT(10))
 			{ }
 
 
@@ -505,6 +507,11 @@ namespace CGAL {
 				m_roof_cleaner_use_vertical_criteria    = false;
 				m_roof_cleaner_use_scale_based_criteria = false;
 				m_roof_cleaner_use_thin_criteria 		= false;
+
+				m_regularize_3d 			    = false;
+				m_use_extra_boundary_extraction = false;
+
+				m_regularization_angle_3d = FT(10);
 			}
 
 			void set_the_most_important_options() {
@@ -587,6 +594,9 @@ namespace CGAL {
 				add_bool_parameter("-rc_use_scale"   , m_roof_cleaner_use_scale_based_criteria, m_parameters);
 				add_bool_parameter("-rc_use_thin"    , m_roof_cleaner_use_thin_criteria       , m_parameters);
 
+				add_bool_parameter("-regularize_3d" , m_regularize_3d				 , m_parameters);
+				add_bool_parameter("-extra_boundary", m_use_extra_boundary_extraction, m_parameters);
+
 				// Important.
 				add_val_parameter("-eps"  , m_imp_eps  , m_parameters);
 				add_val_parameter("-scale", m_imp_scale, m_parameters);
@@ -604,7 +614,8 @@ namespace CGAL {
 				add_val_parameter("-rg_nt_3d" , m_region_growing_normal_threshold_3d, m_parameters);
 				add_val_parameter("-rg_min_3d", m_region_growing_min_points_3d      , m_parameters);
 
-				add_val_parameter("-roof_max", m_roof_cleaner_max_percentage, m_parameters);
+				add_val_parameter("-roof_max"	 , m_roof_cleaner_max_percentage, m_parameters);
+				add_val_parameter("-reg_angle_3d", m_regularization_angle_3d	, m_parameters);
 
 
 				// Automatically defined.
@@ -1344,6 +1355,9 @@ namespace CGAL {
 
 				m_region_growing_3 = std::make_shared<Region_growing_3>(input);
 
+				m_region_growing_3->regularize(m_regularize_3d);
+				m_region_growing_3->set_regularization_angle(m_regularization_angle_3d);
+
 				m_region_growing_3->set_epsilon(m_region_growing_epsilon_3d);
 				m_region_growing_3->set_cluster_epsilon(m_region_growing_cluster_epsilon_3d);
 				m_region_growing_3->set_normal_threshold(m_region_growing_normal_threshold_3d);
@@ -1392,19 +1406,6 @@ namespace CGAL {
 				}
 			}
 
-			void regularizing_kinetic_input_roofs(Buildings &buildings, const size_t exec_step) {
-				
-				// Regularize input roofs.
-				std::cout << "(" << exec_step << ") regularizing kinetic input roofs;" << std::endl;
-
-				Initial_roofs_regularizer initial_roofs_regularizer = Initial_roofs_regularizer(buildings);
-				initial_roofs_regularizer.regularize();
-
-				if (!m_silent) {
-					Log exporter; exporter.save_building_roofs_without_faces(buildings, "tmp" + std::string(PSR) + "lod_2" + std::string(PSR) + "4_regularized_roofs", true);
-				}
-			}
-
 			void estimating_kinetic_input_walls(const FT ground_height, Buildings &buildings, const size_t exec_step) {
 				
 				// Estimate input walls.
@@ -1414,7 +1415,7 @@ namespace CGAL {
 				initial_walls_estimator.estimate();
 
 				if (!m_silent) {
-					Log exporter; exporter.save_building_walls(buildings, "tmp" + std::string(PSR) + "lod_2" + std::string(PSR) + "5_initial_walls", true);
+					Log exporter; exporter.save_building_walls(buildings, "tmp" + std::string(PSR) + "lod_2" + std::string(PSR) + "4_initial_walls", true);
 				}
 			}
 
@@ -1427,7 +1428,7 @@ namespace CGAL {
 				coplanar_walls_detector.detect();
 
 				if (!m_silent) {
-					Log exporter; exporter.save_facets_based_region_growing(buildings, "tmp" + std::string(PSR) + "lod_2" + std::string(PSR) + "6_coplanar_walls");
+					Log exporter; exporter.save_facets_based_region_growing(buildings, "tmp" + std::string(PSR) + "lod_2" + std::string(PSR) + "5_coplanar_walls");
 				}
 			}
 
@@ -1440,7 +1441,7 @@ namespace CGAL {
 				coplanar_walls_merger.merge();
 
 				if (!m_silent) {
-					Log exporter; exporter.save_building_walls(buildings, "tmp" + std::string(PSR) + "lod_2" + std::string(PSR) + "7_merged_walls", true);
+					Log exporter; exporter.save_building_walls(buildings, "tmp" + std::string(PSR) + "lod_2" + std::string(PSR) + "6_merged_walls", true);
 				}
 			}
 
@@ -1458,7 +1459,7 @@ namespace CGAL {
 				m_kinetic_partition_input_creator->create();
 
 				if (!m_silent) {
-					Log exporter; exporter.save_convex_polygons(buildings, "tmp" + std::string(PSR) + "lod_2" + std::string(PSR) + "8_kinetic_partitioning_input");
+					Log exporter; exporter.save_convex_polygons(buildings, "tmp" + std::string(PSR) + "lod_2" + std::string(PSR) + "7_kinetic_partitioning_input");
 				}
 			}
 
@@ -1471,7 +1472,7 @@ namespace CGAL {
 				m_kinetic_partition_output_creator->create();
 
 				if (!m_silent) {
-					Log exporter; exporter.save_polyhedrons(buildings, "tmp" + std::string(PSR) + "lod_2" + std::string(PSR) + "9_kinetic_partitioning_polyhedrons");
+					Log exporter; exporter.save_polyhedrons(buildings, "tmp" + std::string(PSR) + "lod_2" + std::string(PSR) + "8_kinetic_partitioning_polyhedrons");
 				}
 			}
 
@@ -1486,7 +1487,7 @@ namespace CGAL {
 				if (!m_silent) {
 					
 					Log exporter;
-					exporter.save_polyhedrons(buildings, "tmp" + std::string(PSR) + "lod_2" + std::string(PSR) + "10_polyhedron_in_out_estimation");
+					exporter.save_polyhedrons(buildings, "tmp" + std::string(PSR) + "lod_2" + std::string(PSR) + "9_polyhedron_in_out_estimation");
 				}
 			}
 
@@ -1501,7 +1502,7 @@ namespace CGAL {
 				if (!m_silent) {
 					
 					Log exporter;
-					exporter.save_graphcut_facets(buildings, "tmp" + std::string(PSR) + "lod_2" + std::string(PSR) + "11_polyhedron_facets_estimation");
+					exporter.save_graphcut_facets(buildings, "tmp" + std::string(PSR) + "lod_2" + std::string(PSR) + "10_polyhedron_facets_estimation");
 				}
 			}
 
@@ -1515,7 +1516,7 @@ namespace CGAL {
 				graphcut_3.solve(buildings);
 
 				Log exporter;
-				if (!m_silent) exporter.save_polyhedrons(buildings, "tmp" + std::string(PSR) + "lod_2" + std::string(PSR) + "12_graphcut");
+				if (!m_silent) exporter.save_polyhedrons(buildings, "tmp" + std::string(PSR) + "lod_2" + std::string(PSR) + "11_graphcut");
 			}
 
 			void creating_clean_facets(Buildings &buildings, const size_t exec_step) {
@@ -1527,7 +1528,7 @@ namespace CGAL {
 				facets_cleaner.create_clean_facets();
 
 				if (!m_silent) {
-					Log exporter; exporter.save_clean_facets(buildings, "tmp" + std::string(PSR) + "lod_2" + std::string(PSR) + "13_clean_facets");
+					Log exporter; exporter.save_clean_facets(buildings, "tmp" + std::string(PSR) + "lod_2" + std::string(PSR) + "12_clean_facets");
 				}
 			}
 
@@ -1540,7 +1541,7 @@ namespace CGAL {
 				coplanar_facets_detector.detect();
 
 				if (!m_silent) {
-					Log exporter; exporter.save_facets_based_region_growing(buildings, "tmp" + std::string(PSR) + "lod_2" + std::string(PSR) + "14_coplanar_facets");
+					Log exporter; exporter.save_facets_based_region_growing(buildings, "tmp" + std::string(PSR) + "lod_2" + std::string(PSR) + "13_coplanar_facets");
 				}
 			}
 
@@ -1553,7 +1554,7 @@ namespace CGAL {
 				coplanar_facets_merger.merge();
 
 				if (!m_silent) {
-					Log exporter; exporter.save_clean_facets(buildings, "tmp" + std::string(PSR) + "lod_2" + std::string(PSR) + "15_merged_facets");
+					Log exporter; exporter.save_clean_facets(buildings, "tmp" + std::string(PSR) + "lod_2" + std::string(PSR) + "14_merged_facets");
 				}
 			}
 
@@ -1648,7 +1649,7 @@ namespace CGAL {
 				projecting(boundary_clutter_projected, base_ground_plane, boundary_clutter, input, ++exec_step);
 
 
-				if (true) {
+				if (m_use_extra_boundary_extraction) {
 
 					// (04) ----------------------------------
 					applying_boundary_extraction(boundary_clutter_projected, building_boundary_idxs, building_interior_idxs, input, ++exec_step);
@@ -1784,54 +1785,50 @@ namespace CGAL {
 
 
 				// (04) ----------------------------------
-				regularizing_kinetic_input_roofs(buildings, ++exec_step);
-
-
-				// (05) ----------------------------------
 				estimating_kinetic_input_walls(ground_height, buildings, ++exec_step);
 
 
-				// (06) ----------------------------------
+				// (05) ----------------------------------
 				searching_for_coplanar_input_walls(buildings, ++exec_step);
 
 				
-				// (07) ----------------------------------
+				// (06) ----------------------------------
 				merging_coplanar_input_walls(buildings, ++exec_step);
 
 
-				// (08) ----------------------------------
+				// (07) ----------------------------------
 				creating_3d_partitioning_input(ground_height, buildings, ++exec_step);
 
 
-				// (09) ----------------------------------
+				// (08) ----------------------------------
 				creating_3d_partitioning_output(buildings, ++exec_step);
 
 
-				// (10) ----------------------------------
+				// (09) ----------------------------------
 				estimating_in_out_polyhedron_labels(input, ground_height, buildings, ++exec_step);
 
 
-				// (11) ----------------------------------
+				// (10) ----------------------------------
 				estimating_polyhedron_facet_weights_and_quality(input, ground_height, buildings, ++exec_step);
 
 
-				// (12) ----------------------------------
+				// (11) ----------------------------------
 				applying_graphcut_3(buildings, ++exec_step);
 
 				
-				// (13) ----------------------------------
+				// (12) ----------------------------------
 				creating_clean_facets(buildings, ++exec_step);
 
 
-				// (14) ----------------------------------
+				// (13) ----------------------------------
 				searching_for_coplanar_facets(buildings, ++exec_step);
 
 
-				// (15) ----------------------------------
+				// (14) ----------------------------------
 				merging_coplanar_facets(buildings, ++exec_step);
 
 
-				// (16) ----------------------------------
+				// (15) ----------------------------------
 				reconstructing_lod2(cdt, buildings, ground_bbox, ground_height, mesh_2, mesh_facet_colors_2, "LOD2", ++exec_step);
 			}
 
@@ -2191,6 +2188,10 @@ namespace CGAL {
 			bool m_simple_visibility_method;
 			bool m_advanced_visibility_method;
 
+			bool m_regularize_3d;
+			bool m_use_extra_boundary_extraction;
+
+			FT m_regularization_angle_3d;
 
 			// Assert default values of all global parameters.
 			void assert_global_parameters() {

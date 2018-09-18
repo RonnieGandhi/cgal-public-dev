@@ -1,5 +1,5 @@
-#ifndef CGAL_LEVEL_OF_DETAIL_KINETIC_PARTITION_INPUT_CREATOR_STEP_8_H
-#define CGAL_LEVEL_OF_DETAIL_KINETIC_PARTITION_INPUT_CREATOR_STEP_8_H
+#ifndef CGAL_LEVEL_OF_DETAIL_KINETIC_PARTITION_INPUT_CREATOR_STEP_7_H
+#define CGAL_LEVEL_OF_DETAIL_KINETIC_PARTITION_INPUT_CREATOR_STEP_7_H
 
 // STL includes.
 #include <vector>
@@ -22,7 +22,7 @@ namespace CGAL {
 	namespace LOD {
 
 		template<class InputKernel, class InputBuilding, class InputBuildings>
-		class Level_of_detail_kinetic_partition_input_creator_step_8 {
+		class Level_of_detail_kinetic_partition_input_creator_step_7 {
             
         public:
             using Kernel    = InputKernel;
@@ -68,7 +68,7 @@ namespace CGAL {
             using Point_creator_2ft = Creator_uniform_2<Local_ft, Point_2ft>;
             using Points_2ft = std::vector<Point_2ft>;
 
-            Level_of_detail_kinetic_partition_input_creator_step_8(const FT ground_height, Buildings &buildings) :
+            Level_of_detail_kinetic_partition_input_creator_step_7(const FT ground_height, Buildings &buildings) :
             m_ground_height(ground_height),
             m_buildings(buildings),
             m_big_value(FT(100000000000000)),
@@ -417,4 +417,4 @@ namespace CGAL {
 
 } // CGAL
 
-#endif // CGAL_LEVEL_OF_DETAIL_KINETIC_PARTITION_INPUT_CREATOR_STEP_8_H
+#endif // CGAL_LEVEL_OF_DETAIL_KINETIC_PARTITION_INPUT_CREATOR_STEP_7_H

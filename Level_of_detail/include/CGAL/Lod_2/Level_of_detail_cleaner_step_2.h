@@ -53,7 +53,9 @@ namespace CGAL {
 
             using Shapes        = typename Building::Shapes;
             using Shape_indices = typename Building::Indices;
-            using Heights       = std::map<size_t, FT>;
+            using Planes        = typename Building::Planes;
+
+            using Heights = std::map<size_t, FT>;
 
             using Search_traits   = CGAL::Search_traits_3<Kernel>;
 			using Neighbor_search = CGAL::Orthogonal_k_neighbor_search<Search_traits>;
@@ -164,6 +166,8 @@ namespace CGAL {
             void clean_building_roofs(Building &building) const {
 
                 Shapes &shapes = building.shapes;
+                Planes &planes = building.planes;
+
                 const size_t num_shapes = shapes.size();
 
                 Indices indices;
@@ -175,7 +179,7 @@ namespace CGAL {
                 if (m_apply_height_criteria)      apply_height_criteria(shapes, indices);
                 if (m_apply_thin_criteria)        apply_thin_criteria(shapes, indices);
                 
-                update_shapes(indices, shapes);
+                update_shapes_and_planes(indices, shapes, planes);
             }
 
             void apply_thin_criteria(const Shapes &shapes, Indices &indices) const {
@@ -463,13 +467,27 @@ namespace CGAL {
                     points[i] = m_input.point(shape_indices[i]);
             }
 
-            void update_shapes(const Indices &indices, Shapes &shapes) const {
+            void update_shapes_and_planes(const Indices &indices, Shapes &shapes, Planes &planes) const {
 
-                Shapes new_shapes(indices.size());
+                Shapes new_shapes;
                 for (size_t i = 0; i < indices.size(); ++i)
-                    if (shapes[indices[i]].size() > 2) 
-                        new_shapes[i] = shapes[indices[i]];
+                    if (shapes[indices[i]].size() > 2)
+                        new_shapes.push_back(shapes[indices[i]]);
+
+                if (planes.size() != shapes.size()) {
+                    shapes = new_shapes;
+
+                    planes.clear();
+                    return;
+                }
+
+                Planes new_planes;
+                for (size_t i = 0; i < indices.size(); ++i)
+                    if (shapes[indices[i]].size() > 2)
+                        new_planes.push_back(planes[indices[i]]);
+
                 shapes = new_shapes;
+                planes = new_planes;
             }
         };
     }

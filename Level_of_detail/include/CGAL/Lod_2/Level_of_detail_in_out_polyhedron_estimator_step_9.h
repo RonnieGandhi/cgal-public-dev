@@ -1,5 +1,5 @@
-#ifndef CGAL_LEVEL_OF_DETAIL_IN_OUT_POLYHEDRON_ESTIMATOR_STEP_10_H
-#define CGAL_LEVEL_OF_DETAIL_IN_OUT_POLYHEDRON_ESTIMATOR_STEP_10_H
+#ifndef CGAL_LEVEL_OF_DETAIL_IN_OUT_POLYHEDRON_ESTIMATOR_STEP_9_H
+#define CGAL_LEVEL_OF_DETAIL_IN_OUT_POLYHEDRON_ESTIMATOR_STEP_9_H
 
 // STL includes.
 #include <vector>
@@ -21,7 +21,7 @@ namespace CGAL {
 	namespace LOD {
 
 		template<class InputKernel, class InputContainer, class InputBuilding, class InputBuildings>
-		class Level_of_detail_in_out_polyhedron_estimator_step_10 {
+		class Level_of_detail_in_out_polyhedron_estimator_step_9 {
             
         public:
             using Kernel    = InputKernel;
@@ -76,7 +76,7 @@ namespace CGAL {
             // using Tetrahedron    = typename Delaunay_3::Tetrahedron;
             // using Cells_iterator = typename Delaunay_3::Finite_cells_iterator;
 
-            Level_of_detail_in_out_polyhedron_estimator_step_10(const Input &input, const FT ground_height, Buildings &buildings) :
+            Level_of_detail_in_out_polyhedron_estimator_step_9(const Input &input, const FT ground_height, Buildings &buildings) :
             m_input(input),
             m_buildings(buildings),
             m_ground_height(ground_height),
@@ -513,4 +513,4 @@ namespace CGAL {
 
 } // CGAL
 
-#endif // CGAL_LEVEL_OF_DETAIL_IN_OUT_POLYHEDRON_ESTIMATOR_STEP_10_H
+#endif // CGAL_LEVEL_OF_DETAIL_IN_OUT_POLYHEDRON_ESTIMATOR_STEP_9_H

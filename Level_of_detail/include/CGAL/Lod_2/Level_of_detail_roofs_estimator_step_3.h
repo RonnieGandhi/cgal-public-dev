@@ -77,7 +77,9 @@ namespace CGAL {
             Roof_estimation_strategy m_strategy;
 
             void process_building(Building &building) const {
-                building.clear_planes();
+
+                if (building.planes.size() != building.shapes.size())
+                    building.planes.clear();
 
                 const Shapes &shapes = building.shapes;
                 if (shapes.size() == 0) {
@@ -90,23 +92,30 @@ namespace CGAL {
 				for (size_t i = 0; i < shapes.size(); ++i) {
                     
                     const Indices &indices = shapes[i];
-                    process_roof(indices, building);
+                    process_roof(indices, i, building);
                 }
             }
 
-            void process_roof(const Indices &indices, Building &building) const {
+            void process_roof(const Indices &indices, const size_t plane_index, Building &building) const {
                 
                 CGAL_precondition(indices.size() > 2);
-
                 Plane_3 plane;
-                fit_plane_to_roof_points(indices, plane);
-                building.planes.push_back(plane);
+
+                // if (building.planes.size() == building.shapes.size()) plane = building.planes[plane_index];
+                // else {
+                    
+                //     fit_plane_to_roof_points(indices, plane);
+                //     building.planes.push_back(plane);
+                // }
+
+                plane = building.planes[plane_index];
 
                 Points_3 points;   
                 project_points_onto_plane(indices, plane, points);
                 m_strategy.estimate_roof(points, plane, building);
             }
 
+            /*
             void fit_plane_to_roof_points(const Indices &indices, Plane_3 &plane) const {
                 
                 Local_point_3  centroid;
@@ -145,7 +154,7 @@ namespace CGAL {
                 cz /= static_cast<Local_ft>(indices.size());
 
                 centroid = Local_point_3(cx, cy, cz);
-            }
+            } */
 
             void project_points_onto_plane(const Indices &indices, const Plane_3 &plane, Points_3 &points) const {
                 CGAL_precondition(indices.size() > 2);

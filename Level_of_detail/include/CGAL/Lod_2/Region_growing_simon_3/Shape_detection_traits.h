@@ -49,6 +49,8 @@ namespace CGAL {
             class InputNormalMap>
   struct Shape_detection_traits {
     ///
+    typedef Gt Kernel;
+    ///
     typedef typename Gt::FT FT;
     ///
     typedef typename Gt::Point_3 Point_3;

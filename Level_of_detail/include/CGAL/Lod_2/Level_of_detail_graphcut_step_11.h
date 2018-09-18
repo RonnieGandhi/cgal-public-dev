@@ -1,5 +1,5 @@
-#ifndef CGAL_LEVEL_OF_DETAIL_GRAPHCUT_STEP_12_H
-#define CGAL_LEVEL_OF_DETAIL_GRAPHCUT_STEP_12_H 
+#ifndef CGAL_LEVEL_OF_DETAIL_GRAPHCUT_STEP_11_H
+#define CGAL_LEVEL_OF_DETAIL_GRAPHCUT_STEP_11_H 
 
 // STL includes.
 #include <map>
@@ -19,7 +19,7 @@ namespace CGAL {
 	namespace LOD {
 
 		template<class InputKernel, class InputBuilding, class InputBuildings>
-		class Level_of_detail_graphcut_step_12 {
+		class Level_of_detail_graphcut_step_11 {
 
 		public:
             using Kernel    = InputKernel;
@@ -42,7 +42,7 @@ namespace CGAL {
 			using Neighbour  = typename Graphcut_facet::Data;
 			using Neighbours = typename Graphcut_facet::Data_pair;
 
-			Level_of_detail_graphcut_step_12() : 
+			Level_of_detail_graphcut_step_11() : 
 			m_beta(FT(0))
 			{ }
 
@@ -169,4 +169,4 @@ namespace CGAL {
 
 } // LOD
 
-#endif // CGAL_LEVEL_OF_DETAIL_GRAPHCUT_STEP_12_H
+#endif // CGAL_LEVEL_OF_DETAIL_GRAPHCUT_STEP_11_H

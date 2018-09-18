@@ -125,9 +125,6 @@ namespace CGAL {
 
 			FT max_height = -FT(1);
 
-			using Roof_planes = std::vector<Plane_3>;
-			Roof_planes roof_planes;
-
 			struct Roof {
 				
 				using Roof_boundary     = std::vector<Point_3>;

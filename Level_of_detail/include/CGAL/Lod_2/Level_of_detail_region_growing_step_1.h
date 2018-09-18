@@ -51,6 +51,8 @@ namespace CGAL {
 
             using Log = CGAL::LOD::Mylog;
 
+            using Final_planes = typename Building::Planes;
+
             using Local_kernel = CGAL::Simple_cartesian<double>;
 			using Point_3ft    = Local_kernel::Point_3;
 			using Vector_3ft   = Local_kernel::Vector_3;
@@ -79,7 +81,12 @@ namespace CGAL {
 			m_cluster_epsilon(-FT(1)),
 			m_normal_threshold(-FT(1)),
 			m_min_points(0),
-            m_regularize(true)
+            m_regularize(false),
+            m_regularize_parallelism(true),
+            m_regularize_orthogonality(true),
+            m_regularize_coplanarity(false),
+            m_regularize_axis_symmetry(true),
+            m_regularization_angle(FT(10))
             { }
 
             void detect(Buildings &buildings) const {
@@ -90,6 +97,14 @@ namespace CGAL {
                     Building &building = (*bit).second;
                     grow_regions(building);
                 }
+            }
+
+            void regularize(const bool new_state) {
+                m_regularize = new_state;
+            }
+
+            void set_regularization_angle(const FT new_value) {
+                m_regularization_angle = new_value;
             }
 
             void set_epsilon(const FT new_value) {
@@ -124,7 +139,14 @@ namespace CGAL {
             FT m_normal_threshold;
             size_t m_min_points;
 
-            const bool m_regularize;
+            bool m_regularize;
+
+            const bool m_regularize_parallelism;
+            const bool m_regularize_orthogonality;
+            const bool m_regularize_coplanarity;
+            const bool m_regularize_axis_symmetry;
+
+            FT m_regularization_angle;
 
             void grow_regions(Building &building) const {
 
@@ -180,8 +202,14 @@ namespace CGAL {
                 set_parameters(parameters);
 
                 region_growing.detect(parameters);
-                if (m_regularize) regularize_shapes(points, region_growing, building);
+                
+                Final_planes &final_planes = building.planes;
+                final_planes.clear();
 
+                const Planes &planes = region_growing.planes();
+                if (m_regularize) regularize_shapes(points, planes);
+                
+                set_final_planes(planes, final_planes);
                 set_shapes_to_building(region_growing, indices, building);
             }
 
@@ -193,20 +221,21 @@ namespace CGAL {
                 parameters.min_points       = m_min_points * 6;
             }
 
-            void regularize_shapes(Point_set &points, Region_growing &region_growing, Building &building) const {
+            void regularize_shapes(const Point_set &points, const Planes &planes) const {
 
-                Planes planes = region_growing.planes();
-                CGAL::Shape_detection_simon_3::regularize_planes(points, points.point_map(), planes, Plane_map(), Point_to_plane_map(points, planes), true, true, true, true, 10);
-                set_planes_to_building(planes, building);
+                CGAL::Shape_detection_simon_3::regularize_planes(points, points.point_map(), planes, Plane_map(), Point_to_plane_map(points, planes), 
+                m_regularize_parallelism, m_regularize_orthogonality, m_regularize_coplanarity, m_regularize_axis_symmetry, CGAL::to_double(m_regularization_angle));
             }
 
-            void set_planes_to_building(const Planes &planes, Building &building) const {
+            void set_final_planes(const Planes &planes, Final_planes &final_planes) const {
 
-                building.roof_planes.clear();
+                final_planes.clear();
+                final_planes.resize(planes.size());
+
                 for (size_t i = 0; i < planes.size(); ++i) {
                     
-                    const auto plane = get(Plane_map(), *(planes.begin() + i));
-                    building.roof_planes.push_back(Plane_3(plane.a(), plane.b(), plane.c(), plane.d()));
+                    const auto &plane = get(Plane_map(), *(planes.begin() + i));
+                    final_planes[i] = Plane_3(static_cast<FT>(plane.a()), static_cast<FT>(plane.b()), static_cast<FT>(plane.c()), static_cast<FT>(plane.d()));
                 }
             }
 

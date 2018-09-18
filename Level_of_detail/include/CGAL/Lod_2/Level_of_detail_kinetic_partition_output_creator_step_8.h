@@ -1,5 +1,5 @@
-#ifndef CGAL_LEVEL_OF_DETAIL_KINETIC_PARTITION_OUTPUT_CREATOR_STEP_9_H
-#define CGAL_LEVEL_OF_DETAIL_KINETIC_PARTITION_OUTPUT_CREATOR_STEP_9_H
+#ifndef CGAL_LEVEL_OF_DETAIL_KINETIC_PARTITION_OUTPUT_CREATOR_STEP_8_H
+#define CGAL_LEVEL_OF_DETAIL_KINETIC_PARTITION_OUTPUT_CREATOR_STEP_8_H
 
 // STL includes.
 #include <set>
@@ -24,7 +24,7 @@ namespace CGAL {
 	namespace LOD {
 
 		template<class InputKernel, class InputBuilding, class InputBuildings>
-		class Level_of_detail_kinetic_partition_output_creator_step_9 {
+		class Level_of_detail_kinetic_partition_output_creator_step_8 {
             
         public:
             using Kernel    = InputKernel;
@@ -86,7 +86,7 @@ namespace CGAL {
 
             typename Kernel::Compute_squared_distance_3 squared_distance_3;
 
-            Level_of_detail_kinetic_partition_output_creator_step_9(Buildings &buildings) :
+            Level_of_detail_kinetic_partition_output_creator_step_8(Buildings &buildings) :
             m_buildings(buildings),
             m_tolerance(FT(1) / FT(1000))
             { }
@@ -310,4 +310,4 @@ namespace CGAL {
 
 } // CGAL
 
-#endif // CGAL_LEVEL_OF_DETAIL_KINETIC_PARTITION_OUTPUT_CREATOR_STEP_9_H
+#endif // CGAL_LEVEL_OF_DETAIL_KINETIC_PARTITION_OUTPUT_CREATOR_STEP_8_H
