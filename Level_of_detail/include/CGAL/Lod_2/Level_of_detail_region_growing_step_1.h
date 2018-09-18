@@ -86,7 +86,7 @@ namespace CGAL {
             m_regularize_orthogonality(true),
             m_regularize_coplanarity(false),
             m_regularize_axis_symmetry(true),
-            m_regularization_angle(FT(10))
+            m_regularization_angle(FT(25))
             { }
 
             void detect(Buildings &buildings) const {
