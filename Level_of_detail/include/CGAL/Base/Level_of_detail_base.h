@@ -282,7 +282,8 @@ namespace CGAL {
 			m_advanced_visibility_method(false), 
 			m_regularize_3d(false),
 			m_use_extra_boundary_extraction(false),
-			m_regularization_angle_3d(FT(10))
+			m_regularization_angle_3d(FT(25)),
+			m_kinetic_number_of_intersections(1)
 			{ }
 
 
@@ -511,7 +512,8 @@ namespace CGAL {
 				m_regularize_3d 			    = false;
 				m_use_extra_boundary_extraction = false;
 
-				m_regularization_angle_3d = FT(10);
+				m_regularization_angle_3d 		  = FT(25);
+				m_kinetic_number_of_intersections = 1;
 			}
 
 			void set_the_most_important_options() {
@@ -616,6 +618,8 @@ namespace CGAL {
 
 				add_val_parameter("-roof_max"	 , m_roof_cleaner_max_percentage, m_parameters);
 				add_val_parameter("-reg_angle_3d", m_regularization_angle_3d	, m_parameters);
+
+				add_val_parameter("-kin_num_int", m_kinetic_number_of_intersections, m_parameters);
 
 
 				// Automatically defined.
@@ -1469,6 +1473,8 @@ namespace CGAL {
 				std::cout << "(" << exec_step << ") creating 3D partitioning output;" << std::endl;
 				
 				m_kinetic_partition_output_creator = std::make_shared<Kinetic_partition_output_creator>(buildings);
+
+				m_kinetic_partition_output_creator->set_number_of_intersections(m_kinetic_number_of_intersections);
 				m_kinetic_partition_output_creator->create();
 
 				if (!m_silent) {
@@ -2191,7 +2197,9 @@ namespace CGAL {
 			bool m_regularize_3d;
 			bool m_use_extra_boundary_extraction;
 
-			FT m_regularization_angle_3d;
+			FT  m_regularization_angle_3d;
+			int m_kinetic_number_of_intersections;
+
 
 			// Assert default values of all global parameters.
 			void assert_global_parameters() {

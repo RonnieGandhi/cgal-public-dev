@@ -14,6 +14,7 @@
 #include <CGAL/number_utils.h>
 
 // Jean Philippe includes.
+#include <CGAL/Buildings/jean_philippe/universe.h>
 #include <CGAL/Buildings/jean_philippe/propagation.h>
 
 // New CGAL includes.
@@ -88,8 +89,13 @@ namespace CGAL {
 
             Level_of_detail_kinetic_partition_output_creator_step_8(Buildings &buildings) :
             m_buildings(buildings),
-            m_tolerance(FT(1) / FT(1000))
+            m_tolerance(FT(1) / FT(1000)),
+            m_num_intersections(1)
             { }
+
+            void set_number_of_intersections(const int new_value) {
+                m_num_intersections = new_value;
+            }
 
             void create() const {
                 
@@ -127,12 +133,17 @@ namespace CGAL {
 
         private:
             Buildings &m_buildings;
+
             const FT m_tolerance;
+            int m_num_intersections;
 
             void process_building(Building &building) const {
 
                 const JP_polygons &jp_polygons = building.jp_polygons;
                 JP_kinetic_propagation kinetic(jp_polygons);
+
+                // Set parameters.
+                JPTD::Universe::params->K = m_num_intersections;
 
 	            if (!kinetic.data()) return;
                 kinetic.run();
