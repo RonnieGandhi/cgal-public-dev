@@ -716,6 +716,50 @@ namespace CGAL {
 				save(filename, ".ply");
 			}
 
+			template<class Triangle>
+			void save_triangles(const std::vector<Triangle> &triangles, const std::string &filename) {
+				
+				clear();
+
+				size_t num_facets   = triangles.size();
+				size_t num_vertices = num_facets * 3;
+
+				// Add ply header.
+				out << 
+				"ply" + std::string(PN) + ""               					    << 
+				"format ascii 1.0"  + std::string(PN) + ""     				    << 
+				"element vertex "        				   << num_vertices << "" + std::string(PN) + "" << 
+				"property double x" + std::string(PN) + ""    				    << 
+				"property double y" + std::string(PN) + ""    				    << 
+				"property double z" + std::string(PN) + "" 					    <<
+				"element face " 						   << num_facets   << "" + std::string(PN) + "" << 
+				"property list uchar int vertex_indices" + std::string(PN) + "" <<
+				"property uchar red"   + std::string(PN) + "" 				    <<
+				"property uchar green" + std::string(PN) + "" 				    <<
+				"property uchar blue"  + std::string(PN) + "" 				    <<
+				"end_header" + std::string(PN) + "";
+
+				for (size_t i = 0; i < triangles.size(); ++i) {
+
+					const auto &p1 = triangles[i].vertex(0);
+					const auto &p2 = triangles[i].vertex(1);
+					const auto &p3 = triangles[i].vertex(2);
+
+					out << CGAL::to_double(p1.x()) << " " << CGAL::to_double(p1.y()) << " " << 0 << std::endl;
+					out << CGAL::to_double(p2.x()) << " " << CGAL::to_double(p2.y()) << " " << 0 << std::endl;
+					out << CGAL::to_double(p3.x()) << " " << CGAL::to_double(p3.y()) << " " << 0 << std::endl;
+				}
+
+				size_t count = 0;
+				for (size_t i = 0; i < triangles.size(); ++i) {
+					
+					out << 3 << " " << count << " " << count + 1 << " " << count + 2 << " " << generate_random_color() << std::endl;
+					count += 3;
+				}
+
+				save(filename, ".ply");
+			}
+
 			template<class Buildings>
 			void save_building_walls(const Buildings &buildings, const std::string &filename, const bool use_random_color = false) {
 
@@ -1396,7 +1440,7 @@ namespace CGAL {
 				"property double z" + std::string(PN) + "" 					   <<
 				// "property uchar red" + std::string(PN) + "" 				   <<
 				// "property uchar green" + std::string(PN) + "" 			   <<
-				// "property uchar blue" + std::string(PN) + "" 				   <<
+				// "property uchar blue" + std::string(PN) + "" 			   <<
 				"element face " 						   << number_of_faces << "" + std::string(PN) + "" << 
 				"property list uchar int vertex_indices" + std::string(PN) + "" <<
 				"property uchar red" + std::string(PN) + "" 					   <<
@@ -1418,6 +1462,8 @@ namespace CGAL {
 					
 					out << "3 " << V[(*fit).vertex(0)] << " " << V[(*fit).vertex(1)] << " " << V[(*fit).vertex(2)] << " ";
 					
+					// out << generate_random_color() << std::endl;
+
 					if (color_type == "in") out << fit->info().in_color << std::endl;
 					if (color_type == "bu") out << fit->info().bu_color << std::endl;
 				}

@@ -43,7 +43,8 @@ namespace CGAL {
 			using Neighbours = typename Graphcut_facet::Data_pair;
 
 			Level_of_detail_graphcut_step_11() : 
-			m_beta(FT(0))
+			m_beta(FT(0)),
+			m_run_test(false)
 			{ }
 
 			void set_beta(const FT beta) {
@@ -51,6 +52,9 @@ namespace CGAL {
 			}
 
 			void solve(Buildings &buildings) const {
+
+				if (m_run_test) 
+					run_test();
 
 				if (buildings.size() == 0)
                     return;
@@ -65,6 +69,37 @@ namespace CGAL {
 
 		private:
 			FT m_beta;
+			const bool m_run_test;
+
+			void run_test() const {
+
+				Graph::node_id nodes[2];
+				Graph *g = new Graph();
+
+				nodes[0] = g -> add_node();
+				nodes[1] = g -> add_node();
+
+				g -> set_tweights(nodes[0], 1, 5);
+				g -> set_tweights(nodes[1], 2, 6);
+
+				g -> add_edge(nodes[0], nodes[1], 3, 4);
+
+				Graph::flowtype flow = g -> maxflow();
+
+				printf("Flow = %d\n", flow);
+				printf("Minimum cut:\n");
+				if (g->what_segment(nodes[0]) == Graph::SOURCE)
+					printf("node0 is in the SOURCE set\n");
+				else
+					printf("node0 is in the SINK set\n");
+				if (g->what_segment(nodes[1]) == Graph::SOURCE)
+					printf("node1 is in the SOURCE set\n");
+				else
+					printf("node1 is in the SINK set\n");
+
+				delete g;
+				exit(1);
+			}
 
 			void process_building(Building &building) const {
 

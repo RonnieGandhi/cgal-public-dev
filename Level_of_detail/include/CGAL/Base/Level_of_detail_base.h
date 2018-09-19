@@ -1503,6 +1503,8 @@ namespace CGAL {
 				std::cout << "(" << exec_step << ") estimating polyhedron facet weights and quality;" << std::endl;
 
 				Polyhedron_facet_weight_quality_estimator polyhedron_facet_weight_quality_estimator(input, ground_height, buildings);
+				
+				polyhedron_facet_weight_quality_estimator.set_alpha(m_alpha_shape_size);
 				polyhedron_facet_weight_quality_estimator.estimate();
 
 				if (!m_silent) {

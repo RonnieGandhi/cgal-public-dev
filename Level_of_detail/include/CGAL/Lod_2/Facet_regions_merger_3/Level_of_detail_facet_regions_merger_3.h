@@ -231,7 +231,7 @@ namespace CGAL {
                 CGAL_precondition(length != FT(0));
                 if (length == FT(0)) {
 
-                    std::cout << "error: length = 0" << std::endl;
+                    std::cout << "error facet regions merger: length = 0" << std::endl;
                     exit(0);
                 }
                 axis = cross / length;

@@ -73,10 +73,10 @@ namespace CGAL {
 				FT angle_3d; Vector_3 axis;
 				const bool success = compute_angle_and_axis(roof_normal, ground_normal, angle_3d, axis);
 
-				if (!success) 
-					return;
-				
-				if (angle_3d != FT(0)) 
+				if (!success) return;
+				const FT angle_3d_deg = angle_3d * FT(180) / static_cast<FT>(CGAL_PI);
+
+				if (angle_3d_deg != FT(0) && angle_3d_deg != FT(180))
 					rotate_points(angle_3d, axis, roof_points);
 
                 Vector_2 roof_direction;
@@ -98,7 +98,9 @@ namespace CGAL {
 				compute_bounding_box(roof_points, boundary);
 
 				rotate_points(-angle_2d, barycentre, boundary);
-				rotate_points(-angle_3d, axis, boundary);
+				
+				if (angle_3d_deg != FT(0) && angle_3d_deg != FT(180))
+					rotate_points(-angle_3d, axis, boundary);
 				
 				if (!is_valid_boundary(boundary)) {
 				
@@ -129,10 +131,18 @@ namespace CGAL {
 				const   FT    dot = dot_product_3(m, n);
 
 				angle = static_cast<FT>(std::atan2(CGAL::to_double(length), CGAL::to_double(dot)));
-				
-				if ( angle == FT(0)) return true;
-				if (length == FT(0)) return false;
+				const FT angle_deg = angle * FT(180) / static_cast<FT>(CGAL_PI);
 
+				if (angle_deg == FT(0) || angle_deg == FT(180)) 
+					return true;
+
+				if (length == FT(0)) {
+				
+					std::cout << "error estimator box strategy: length = 0" << std::endl;
+                    exit(0);
+				
+					return false;
+				}
 				CGAL_precondition(length != FT(0));
 				
 				axis = cross / length;

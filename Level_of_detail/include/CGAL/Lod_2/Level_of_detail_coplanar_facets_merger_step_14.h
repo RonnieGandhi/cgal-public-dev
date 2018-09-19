@@ -30,7 +30,8 @@ namespace CGAL {
             using Facet_regions_merger = Level_of_detail_facet_regions_merger_3<Kernel, Building>;
 			
             Level_of_detail_coplanar_facets_merger_step_14(Buildings &buildings) :
-            m_buildings(buildings)
+            m_buildings(buildings),
+            m_use_original_facets(true)
             { }
 
             void merge() {
@@ -48,8 +49,12 @@ namespace CGAL {
 
         private:
             Buildings &m_buildings;
+            const bool m_use_original_facets;
 
             void process_building(Building &building) const {
+
+                if (m_use_original_facets)
+                    return;
 
                 Clean_facets &clean_facets = building.clean_facets;
                 clean_facets.clear();

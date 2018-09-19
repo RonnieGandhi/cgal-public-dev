@@ -85,7 +85,8 @@ namespace CGAL {
             m_angle_threshold(FT(10)),
             m_height_offset(FT(1) / FT(8)),
             m_bc_tolerance_top(FT(6) / FT(5)),
-            m_bc_tolerance_bottom(-FT(1) / FT(5))
+            m_bc_tolerance_bottom(-FT(1) / FT(5)),
+            m_default_weight(FT(1000000))
             { }
 
             void estimate() {
@@ -115,6 +116,8 @@ namespace CGAL {
             const FT m_height_offset;
             const FT m_bc_tolerance_top;
             const FT m_bc_tolerance_bottom;
+
+            const FT m_default_weight;
 
             void compute_building_maximum_height(Building &building) const {
 
@@ -470,10 +473,14 @@ namespace CGAL {
 
             FT compute_weight(const Polyhedron &polyhedron) const {
                 
-                return FT(1);
+                return get_default_weight();
 
                 // const FT weight = compute_volume(polyhedron);
                 // return get_weight(weight);
+            }
+
+            FT get_default_weight() const {
+                return m_default_weight;
             }
 
             /*

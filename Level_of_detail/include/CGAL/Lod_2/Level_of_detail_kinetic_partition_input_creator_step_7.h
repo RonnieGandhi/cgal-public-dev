@@ -73,7 +73,7 @@ namespace CGAL {
             m_buildings(buildings),
             m_big_value(FT(100000000000000)),
             m_z_scale(FT(10)),
-            m_up_scale(FT(3) / FT(2)),
+            m_up_scale(FT(3)), // FT(3) / FT(2) - old value
             m_down_scale(FT(1) / FT(2)),
             m_disc_scale(FT(1) / FT(10)),
             m_num_points_in_disc(25),
@@ -278,6 +278,12 @@ namespace CGAL {
 				angle = static_cast<FT>(std::atan2(CGAL::to_double(length), CGAL::to_double(dot)));
                 if (angle == FT(0)) return;
 
+                if (length == FT(0)) {
+
+                    std::cout << "error kinetic input creator: length = 0" << std::endl;
+                    exit(0);
+                }
+
                 CGAL_precondition(length != FT(0));
                 axis = cross / length;
 
@@ -408,7 +414,7 @@ namespace CGAL {
                         continue;
 
                     Roof &roof = roofs[i];
-                    process_polygon(roof.boundary, jp_polygons, m_down_scale, FT(1));
+                    process_polygon(roof.boundary, jp_polygons, m_up_scale, FT(1));
 				}
             }
         };

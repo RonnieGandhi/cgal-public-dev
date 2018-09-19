@@ -55,7 +55,7 @@ if (CGAL_FOUND)
 
 	include(${CGAL_USE_FILE})
 	include_directories(BEFORE "../../../../include" ${OpenCV_INCLUDE_DIRS} ${GDAL_INCLUDE_DIR} ${Boost_INCLUDE_DIRS} "../../../../../../extra-code/libs/OOQP-master/include")
-	set(CMAKE_CXX_FLAGS "${CMAXE_CXX_FLAGS} -fdeclspec -Wno-ignored-attributes -Wno-parentheses -Wno-return-type -Wno-macro-redefined -Wno-switch -Wno-logical-op-parentheses -Wno-deprecated-declarations -Wno-user-defined-warnings -Wno-unused-result")
+	set(CMAKE_CXX_FLAGS "${CMAXE_CXX_FLAGS} -fdeclspec -Wno-format -Wno-ignored-attributes -Wno-parentheses -Wno-return-type -Wno-macro-redefined -Wno-switch -Wno-logical-op-parentheses -Wno-deprecated-declarations -Wno-user-defined-warnings -Wno-unused-result")
 
 	set(sources main.cpp
 	../../../../include/CGAL/Regularizer/jean_philippe/indexed_event.cpp 

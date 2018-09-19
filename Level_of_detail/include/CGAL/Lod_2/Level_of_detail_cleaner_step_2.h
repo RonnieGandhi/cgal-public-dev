@@ -68,7 +68,7 @@ namespace CGAL {
             m_scale_upper_bound(-FT(1)),
             m_max_percentage(FT(80)),
             m_angle_threshold(FT(25)),
-            m_distance_threshold(FT(1) / FT(5)),
+            m_distance_threshold(FT(1) / FT(2)),
             m_apply_size_criteria(true),
             m_apply_height_criteria(false),
             m_apply_vertical_criteria(true),
