@@ -1438,9 +1438,9 @@ namespace CGAL {
 				"property double x" + std::string(PN) + ""    				   << 
 				"property double y" + std::string(PN) + ""    				   << 
 				"property double z" + std::string(PN) + "" 					   <<
-				// "property uchar red" + std::string(PN) + "" 				   <<
+				// "property uchar red" + std::string(PN)   + "" 			   <<
 				// "property uchar green" + std::string(PN) + "" 			   <<
-				// "property uchar blue" + std::string(PN) + "" 			   <<
+				// "property uchar blue" + std::string(PN)  + "" 			   <<
 				"element face " 						   << number_of_faces << "" + std::string(PN) + "" << 
 				"property list uchar int vertex_indices" + std::string(PN) + "" <<
 				"property uchar red" + std::string(PN) + "" 					   <<
@@ -1462,10 +1462,10 @@ namespace CGAL {
 					
 					out << "3 " << V[(*fit).vertex(0)] << " " << V[(*fit).vertex(1)] << " " << V[(*fit).vertex(2)] << " ";
 					
-					// out << generate_random_color() << std::endl;
+					out << generate_random_color() << std::endl;
 
-					if (color_type == "in") out << fit->info().in_color << std::endl;
-					if (color_type == "bu") out << fit->info().bu_color << std::endl;
+					// if (color_type == "in") out << fit->info().in_color << std::endl;
+					// if (color_type == "bu") out << fit->info().bu_color << std::endl;
 				}
 
 				save(filename, ".ply");

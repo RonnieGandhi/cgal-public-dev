@@ -359,7 +359,7 @@ namespace CGAL {
                 const FT half_pi = static_cast<FT>(CGAL_PI) / FT(2);
                 if (angle_rad > half_pi) angle_rad = static_cast<FT>(CGAL_PI) - angle_rad;
 
-				const FT angle_deg = angle_rad * FT(180) / static_cast<FT>(CGAL_PI); // std::cout << angle_deg << std::endl;
+				const FT angle_deg = angle_rad * FT(180) / static_cast<FT>(CGAL_PI);
                 return angle_deg;
 			}
 

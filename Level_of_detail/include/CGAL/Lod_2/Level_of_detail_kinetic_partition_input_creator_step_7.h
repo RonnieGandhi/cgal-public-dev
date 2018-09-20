@@ -233,18 +233,23 @@ namespace CGAL {
                 Vector_3 target_normal;
                 compute_target_normal(target_normal);
 
-                FT angle;
-                Vector_3 axis;
-                compute_angle_and_axis(source_normal, target_normal, angle, axis);
+                FT angle; Vector_3 axis;
+                const bool success = compute_angle_and_axis(source_normal, target_normal, angle, axis);
+
+                if (!success) return;
 
                 Point_3 b;
                 compute_barycentre(polygon, b);
 
-                if (angle != FT(0)) rotate_polygon(b, angle, axis, polygon);
+                const FT angle_deg = angle * FT(180) / static_cast<FT>(CGAL_PI);
+                
+                if (angle_deg != FT(0) && angle_deg != FT(180))
+                    rotate_polygon(b, angle, axis, polygon);
                 
                 perturb_horizontal_polygon(polygon);
 
-                if (angle != FT(0)) rotate_polygon(b, -angle, axis, polygon);
+                if (angle_deg != FT(0) && angle_deg != FT(180))
+                    rotate_polygon(b, -angle, axis, polygon);
             }
 
             void compute_source_normal(const Polygon &polygon, Vector_3 &normal) const {
@@ -269,23 +274,28 @@ namespace CGAL {
                 normal = Vector_3(FT(0), FT(0), FT(1));
             }
 
-            void compute_angle_and_axis(const Vector_3 &m, const Vector_3 &n, FT &angle, Vector_3 &axis) const {
+            bool compute_angle_and_axis(const Vector_3 &m, const Vector_3 &n, FT &angle, Vector_3 &axis) const {
 				
-				const auto cross = cross_product_3(m, n);
-				const FT length  = static_cast<FT>(CGAL::sqrt(CGAL::to_double(squared_length_3(cross))));
-				const FT dot     = dot_product_3(m, n);
+				const auto  cross = cross_product_3(m, n);
+				const   FT length = static_cast<FT>(CGAL::sqrt(CGAL::to_double(squared_length_3(cross))));
+				const   FT    dot = dot_product_3(m, n);
 
 				angle = static_cast<FT>(std::atan2(CGAL::to_double(length), CGAL::to_double(dot)));
-                if (angle == FT(0)) return;
+				const FT angle_deg = angle * FT(180) / static_cast<FT>(CGAL_PI);
 
-                if (length == FT(0)) {
+				if (angle_deg == FT(0) || angle_deg == FT(180)) 
+					return true;
 
-                    std::cout << "error kinetic input creator: length = 0" << std::endl;
+				if (length == FT(0)) {
+                 
+                    std::cout << "error weight quality estimator: length = 0" << std::endl;
                     exit(0);
+                 
+                    return false;
                 }
-
-                CGAL_precondition(length != FT(0));
-                axis = cross / length;
+                
+				CGAL_precondition(length != FT(0));
+				axis = cross / length;
 
                 const FT half_pi = static_cast<FT>(CGAL_PI) / FT(2);
                 if (angle > half_pi) {
@@ -293,6 +303,8 @@ namespace CGAL {
                     angle = static_cast<FT>(CGAL_PI) - angle;
                     axis = -axis;
                 }
+
+				return true;
 			}
 
             void rotate_polygon(const Point_3 &b, const FT angle, const Vector_3 &axis, Polygon &polygon) const {

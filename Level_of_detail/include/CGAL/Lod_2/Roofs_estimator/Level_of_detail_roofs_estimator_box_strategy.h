@@ -91,8 +91,7 @@ namespace CGAL {
 				Point_2 barycentre;
                 compute_barycentre(roof_points, barycentre);
 
-				if (angle_2d != FT(0))
-					rotate_points(angle_2d, barycentre, roof_points);
+				rotate_points(angle_2d, barycentre, roof_points);
 
 				Points boundary;
 				compute_bounding_box(roof_points, boundary);
@@ -137,15 +136,23 @@ namespace CGAL {
 					return true;
 
 				if (length == FT(0)) {
-				
-					std::cout << "error estimator box strategy: length = 0" << std::endl;
+                 
+                    std::cout << "error weight quality estimator: length = 0" << std::endl;
                     exit(0);
-				
-					return false;
-				}
+                 
+                    return false;
+                }
+                
 				CGAL_precondition(length != FT(0));
-				
 				axis = cross / length;
+
+                const FT half_pi = static_cast<FT>(CGAL_PI) / FT(2);
+                if (angle > half_pi) {
+                    
+                    angle = static_cast<FT>(CGAL_PI) - angle;
+                    axis = -axis;
+                }
+
 				return true;
 			}
 
@@ -229,7 +236,6 @@ namespace CGAL {
 				const FT dot   = dot_product_2(m, n);
 
 				angle = static_cast<FT>(std::atan2(CGAL::to_double(cross), CGAL::to_double(dot)));
-				if (angle == FT(0)) return;
 			}
 
 			void compute_barycentre(const Points &points, Point_2 &barycentre) const {

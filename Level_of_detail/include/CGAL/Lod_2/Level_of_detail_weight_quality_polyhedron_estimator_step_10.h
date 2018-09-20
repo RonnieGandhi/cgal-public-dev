@@ -105,10 +105,11 @@ namespace CGAL {
             m_ground_height(ground_height),
             m_tolerance(FT(1) / FT(100000)),
             m_edge_length_tolerance(FT(1) / FT(1000)),
-            m_distance_threshold(FT(1) / FT(2)),
+            m_distance_threshold(FT(2)),
             m_big_value(FT(100000000000000)),
-            m_bc_tolerance_top(FT(6) / FT(5)),
-            m_bc_tolerance_bottom(-FT(1) / FT(5)),
+            m_extra_bc(FT(1) / FT(100)),
+            m_bc_tolerance_top(FT(1) + m_extra_bc),
+            m_bc_tolerance_bottom(FT(0) - m_extra_bc),
             m_default_weight(FT(1000000)),
             m_default_quality(FT(0)),
             m_alpha(-FT(1)) { 
@@ -145,6 +146,7 @@ namespace CGAL {
             const FT m_distance_threshold;
             const FT m_big_value;
 
+            const FT m_extra_bc;
             const FT m_bc_tolerance_top;
             const FT m_bc_tolerance_bottom;
 
@@ -269,7 +271,7 @@ namespace CGAL {
                 compute_weight(facets[facet_index], vertices, gc_facet);
                 compute_quality(interior_indices, facets[facet_index], vertices, gc_facet);
 
-                if (gc_facet.quality != get_default_quality()) gc_facet.is_valid = true;
+                if (gc_facet.quality > FT(2) / FT(5)) gc_facet.is_valid = true;
                 else gc_facet.is_valid = false;
 
                 gc_facets.push_back(gc_facet);
@@ -313,10 +315,10 @@ namespace CGAL {
                 FT angle; Vector_3 axis;
                 success = compute_angle_and_axis(source_normal, target_normal, angle, axis);
 
+                if (!success) return get_default_weight();
+                
                 Point_3 b;
                 compute_3d_polygon_barycentre(facet, vertices, b);
-
-                if (!success) return get_default_weight();
                     
                 Polygon polygon;
                 success = create_polygon(facet, vertices, b, angle, axis, polygon);
@@ -460,10 +462,10 @@ namespace CGAL {
                 FT angle; Vector_3 axis;
                 success = compute_angle_and_axis(source_normal, target_normal, angle, axis);
 
+                if (!success) return get_default_quality();
+
                 Point_3 b;
                 compute_3d_polygon_barycentre(facet, vertices, b);
-
-                if (!success) return get_default_quality();
                     
                 Polygon polygon;
                 success = create_polygon(facet, vertices, b, angle, axis, polygon);
@@ -473,16 +475,24 @@ namespace CGAL {
                 Points_2 queries;
                 create_queries(closest, b, angle, axis, queries);
 
-                // Log logger;
-                // logger.export_polygon("tmp" + std::string(PSR) + "lod_2" + std::string(PSR) + "debug_polygon", facet, vertices);
-                // logger.export_polygon("tmp" + std::string(PSR) + "lod_2" + std::string(PSR) + "debug_polygon_rotated", polygon);
-                
-                // Points_3 closest_points(closest.size());
-                // for (size_t i = 0; i < closest.size(); ++i)
-                //     closest_points[i] = m_input.point(closest[i]);
+                // debug
 
-                // logger.export_3d_points("tmp" + std::string(PSR) + "lod_2" + std::string(PSR) + "debug_points", closest_points);
-                // logger.export_points("tmp" + std::string(PSR) + "lod_2" + std::string(PSR) + "debug_points_rotated", queries);
+                /*
+
+                Log logger;
+                logger.export_polygon("tmp" + std::string(PSR) + "lod_2" + std::string(PSR) + "debug_polygon", facet, vertices);
+                logger.export_polygon("tmp" + std::string(PSR) + "lod_2" + std::string(PSR) + "debug_polygon_rotated", polygon);
+                
+                Points_3 closest_points(closest.size());
+                for (size_t i = 0; i < closest.size(); ++i)
+                    closest_points[i] = m_input.point(closest[i]);
+
+                logger.export_3d_points("tmp" + std::string(PSR) + "lod_2" + std::string(PSR) + "debug_points", closest_points);
+                logger.export_points("tmp" + std::string(PSR) + "lod_2" + std::string(PSR) + "debug_points_rotated", queries);
+
+                */
+
+                //
 
                 Indices tmp;
                 find_points_inside_polygon(polygon, queries, closest, tmp, internal);
@@ -552,9 +562,17 @@ namespace CGAL {
                  
                     return false;
                 }
+                
 				CGAL_precondition(length != FT(0));
-				
 				axis = cross / length;
+
+                const FT half_pi = static_cast<FT>(CGAL_PI) / FT(2);
+                if (angle > half_pi) {
+                    
+                    angle = static_cast<FT>(CGAL_PI) - angle;
+                    axis = -axis;
+                }
+
 				return true;
 			}
 
@@ -650,7 +668,8 @@ namespace CGAL {
                 for (size_t i = 0; i < closest.size(); ++i) {
                     const Point_3 &p = m_input.point(closest[i]);
 
-                    if (angle != 0) {
+                    const FT angle_deg = angle * FT(180) / static_cast<FT>(CGAL_PI);
+                    if (angle_deg != FT(0) && angle_deg != FT(180)) {
 
                         Point_3 q = Point_3(p.x() - b.x(), p.y() - b.y(), p.z() - b.z());
                         rotate_point(angle, axis, q);
@@ -681,6 +700,8 @@ namespace CGAL {
                         internal.push_back(closest[i]);
                     }
                 }
+
+                // std::cout << internal.size() << " : " << tmp.size() << std::endl;
             }
 
             bool is_inside_polygon(const Coordinates &coordinates) const {
@@ -691,10 +712,7 @@ namespace CGAL {
             }
 
             FT estimate_initial_quality(const Polygon &polygon, const Points_2 &queries, const Indices &tmp) const {
-
                 return compute_alpha_shapes_based_quality(polygon, queries, tmp);
-
-                // return compute_bbox_based_quality(polygon, queries, tmp);
             }
 
             FT compute_alpha_shapes_based_quality(const Polygon &polygon, const Points_2 &queries, const Indices &tmp) const {
@@ -715,7 +733,15 @@ namespace CGAL {
 
             FT compute_polygon_area(const Polygon &polygon) const {
 
-                // std::cout << "polygon area: " << polygon.area() << std::endl;
+                // debug
+
+                /*
+                Log logger;
+                logger.export_polygon("tmp" + std::string(PSR) + "lod_2" + std::string(PSR) + "in_polygon", polygon);
+                std::cout << "polygon area: " << polygon.area() << std::endl; */
+
+                //
+
                 return polygon.area();
             }
 
@@ -750,11 +776,14 @@ namespace CGAL {
                     }
                 }
 
+                // std::cout << "alpha shapes area: " << total_area << std::endl << std::endl;
+                
                 return total_area;
 
                 // debug
 
                 /*
+
                 Points_2 in_points;
                 for (size_t i = 0; i < tmp.size(); ++i) {
                     
@@ -789,10 +818,18 @@ namespace CGAL {
                 logger.export_points("tmp" + std::string(PSR) + "lod_2" + std::string(PSR) + "out_points", out_points);
                 logger.save_triangles(out_cdt, "tmp" + std::string(PSR) + "lod_2" + std::string(PSR) + "out_cdt");
 
-                std::cout << "alpha shapes area: " << total_area << std::endl;
-                exit(0); */
+                exit(0);
+
+                // */
             }
 
+            FT get_quality(const FT quality) const {
+                
+                CGAL_precondition(quality >= FT(0) && quality <= FT(1));
+                return quality;
+            }
+
+            /*
             FT compute_bbox_based_quality(const Polygon &polygon, const Points_2 &queries, const Indices &tmp) const {
 
                 Points_2 bbox1;
@@ -815,18 +852,11 @@ namespace CGAL {
                 return initial_quality;
             }
 
-            FT get_quality(const FT quality) const {
-                
-                CGAL_precondition(quality >= FT(0) && quality <= FT(1));
-                return quality;
-            }
-
-            /*
             FT inverse(const FT value) const {
                 
                 CGAL_precondition(value >= FT(0) && value <= FT(1));
                 return FT(1) - value;
-            } */
+            }
 
             void compute_2d_polygon_bounding_box(const Polygon &polygon, Points_2 &bbox) const {
                 
@@ -888,7 +918,6 @@ namespace CGAL {
                 return width * height;
             }
 
-            /*
             void compute_barycentre(const Polygon &polygon, Point_2 &b) const {
 
                 CGAL_precondition(polygon.size() > 2);
@@ -964,8 +993,23 @@ namespace CGAL {
                 CGAL_precondition(initial_quality >= FT(0) && initial_quality <= FT(1));
                 CGAL_precondition(extra_quality   >= FT(0) && extra_quality   <= FT(1));
 
-                const FT final_quality = CGAL::min(initial_quality, extra_quality);
-                return final_quality;
+                const FT final_quality = initial_quality; // CGAL::min(initial_quality, extra_quality);
+                return get_final_quality(final_quality);
+            }
+
+            FT get_final_quality(const FT final_quality) const {
+
+                return const_function_value(final_quality);
+
+                // return tanh_function_value(final_quality);
+            }
+
+            FT const_function_value(const FT value) const {
+                return value;
+            }
+
+            FT tanh_function_value(const FT value) const {
+                return static_cast<FT>(std::tanh(4.0 * CGAL::to_double(value)));
             }
 
             void find_neighbours(const Polyhedrons &polyhedrons, const Polyhedron_facets &facets, const Polyhedron_vertices &vertices, 

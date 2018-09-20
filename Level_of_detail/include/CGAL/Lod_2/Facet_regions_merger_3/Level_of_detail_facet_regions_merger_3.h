@@ -93,7 +93,7 @@ namespace CGAL {
             bool merge_region_facets(Region_facets &region_facets, Clean_facets &clean_facets) const {
 
                 Vector_3 source_normal;
-                const bool success = compute_source_normal(region_facets, source_normal);
+                bool success = compute_source_normal(region_facets, source_normal);
 
                 if (!success) {
                  
@@ -109,12 +109,17 @@ namespace CGAL {
                 if (source_normal == -target_normal) source_normal = target_normal;
 
                 FT angle; Vector_3 axis;
-                compute_angle_and_axis(source_normal, target_normal, angle, axis);
+                success = compute_angle_and_axis(source_normal, target_normal, angle, axis);
+
+                if (!success) return;
 
                 Point_3 b;
                 compute_barycentre(region_facets, b);
 
-                rotate_region_facets(region_facets, angle, axis, b);
+                const FT angle_deg = angle * FT(180) / static_cast<FT>(CGAL_PI);
+                
+                if (angle_deg != FT(0) && angle_deg != FT(180))
+                    rotate_region_facets(region_facets, angle, axis, b);
 
                 CDT cdt;
                 triangulate_region_facets(region_facets, cdt);
@@ -122,7 +127,8 @@ namespace CGAL {
                 if (cdt.number_of_faces() != 0) get_back_region_facets(cdt, region_facets);
                 fix_orientation(region_facets);
 
-                rotate_region_facets(region_facets, -angle, axis, b, true);
+                if (angle_deg != FT(0) && angle_deg != FT(180))
+                    rotate_region_facets(region_facets, -angle, axis, b, true);
                 
                 for (size_t i = 0; i < region_facets.size(); ++i)
                     clean_facets.push_back(region_facets[i]);
@@ -219,22 +225,28 @@ namespace CGAL {
                 normal = Vector_3(FT(0), FT(0), FT(1));
             }
 
-            void compute_angle_and_axis(const Vector_3 &m, const Vector_3 &n, FT &angle, Vector_3 &axis) const {
+            bool compute_angle_and_axis(const Vector_3 &m, const Vector_3 &n, FT &angle, Vector_3 &axis) const {
 
-				const auto cross = cross_product_3(m, n);
-				const FT length  = static_cast<FT>(CGAL::sqrt(CGAL::to_double(squared_length_3(cross))));
-				const FT dot     = dot_product_3(m, n);
+				const auto  cross = cross_product_3(m, n);
+				const   FT length = static_cast<FT>(CGAL::sqrt(CGAL::to_double(squared_length_3(cross))));
+				const   FT    dot = dot_product_3(m, n);
 
 				angle = static_cast<FT>(std::atan2(CGAL::to_double(length), CGAL::to_double(dot)));
-                if (angle == FT(0)) return;
+				const FT angle_deg = angle * FT(180) / static_cast<FT>(CGAL_PI);
 
-                CGAL_precondition(length != FT(0));
-                if (length == FT(0)) {
+				if (angle_deg == FT(0) || angle_deg == FT(180)) 
+					return true;
 
-                    std::cout << "error facet regions merger: length = 0" << std::endl;
+				if (length == FT(0)) {
+                 
+                    std::cout << "error weight quality estimator: length = 0" << std::endl;
                     exit(0);
+                 
+                    return false;
                 }
-                axis = cross / length;
+                
+				CGAL_precondition(length != FT(0));
+				axis = cross / length;
 
                 const FT half_pi = static_cast<FT>(CGAL_PI) / FT(2);
                 if (angle > half_pi) {
@@ -242,6 +254,8 @@ namespace CGAL {
                     angle = static_cast<FT>(CGAL_PI) - angle;
                     axis = -axis;
                 }
+
+				return true;
 			}
 
             void compute_barycentre(const Region_facets &region_facets, Point_3 &b) const {
