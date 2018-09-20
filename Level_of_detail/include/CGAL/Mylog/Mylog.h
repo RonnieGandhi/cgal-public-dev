@@ -1462,10 +1462,10 @@ namespace CGAL {
 					
 					out << "3 " << V[(*fit).vertex(0)] << " " << V[(*fit).vertex(1)] << " " << V[(*fit).vertex(2)] << " ";
 					
-					out << generate_random_color() << std::endl;
+					// out << generate_random_color() << std::endl;
 
-					// if (color_type == "in") out << fit->info().in_color << std::endl;
-					// if (color_type == "bu") out << fit->info().bu_color << std::endl;
+					if (color_type == "in") out << fit->info().in_color << std::endl;
+					if (color_type == "bu") out << fit->info().bu_color << std::endl;
 				}
 
 				save(filename, ".ply");
