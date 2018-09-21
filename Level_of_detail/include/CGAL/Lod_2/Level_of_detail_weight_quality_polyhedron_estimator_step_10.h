@@ -107,7 +107,7 @@ namespace CGAL {
             m_edge_length_tolerance(FT(1) / FT(1000)),
             m_distance_threshold(FT(2)),
             m_big_value(FT(100000000000000)),
-            m_extra_bc(FT(1) / FT(100)),
+            m_extra_bc(FT(1) / FT(1000)),
             m_bc_tolerance_top(FT(1) + m_extra_bc),
             m_bc_tolerance_bottom(FT(0) - m_extra_bc),
             m_default_weight(FT(1000000)),

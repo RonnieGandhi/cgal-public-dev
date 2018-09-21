@@ -26,7 +26,7 @@ namespace CGAL {
 			using Building  = InputBuilding;
 			using Buildings = InputBuildings;
 
-			typedef typename Kernel::FT FT;
+			using FT = typename Kernel::FT;
 
 			using Graph   = Maxflow::Graph;
 			using Node_id = typename Graph::node_id;
@@ -79,12 +79,12 @@ namespace CGAL {
 				nodes[0] = g -> add_node();
 				nodes[1] = g -> add_node();
 
-				g -> set_tweights(nodes[0], 1, 5);
-				g -> set_tweights(nodes[1], 2, 6);
+				g->set_tweights(nodes[0], 1, 5);
+				g->set_tweights(nodes[1], 2, 6);
 
-				g -> add_edge(nodes[0], nodes[1], 3, 4);
+				g->add_edge(nodes[0], nodes[1], 3, 4);
 
-				Graph::flowtype flow = g -> maxflow();
+				Graph::flowtype flow = g->maxflow();
 
 				printf("Flow = %d\n", flow);
 				printf("Minimum cut:\n");
@@ -103,8 +103,8 @@ namespace CGAL {
 
 			void process_building(Building &building) const {
 
-				Polyhedrons 		  &polyhedrons 	   = building.polyhedrons;
-				const Graphcut_facets &graphcut_facets = building.graphcut_facets;
+				Polyhedrons 		  &polyhedrons = building.polyhedrons;
+				Graphcut_facets &graphcut_facets   = building.graphcut_facets;
 
 				const unsigned int num_nodes = polyhedrons.size();
 
@@ -121,7 +121,18 @@ namespace CGAL {
 				delete[] pNodes;
             }
 
-			void set_graph_nodes(const Polyhedrons &polyhedrons, Node_id *pNodes, Graph *graph) const {
+			void set_graph_nodes(Polyhedrons &polyhedrons, Node_id *pNodes, Graph *graph) const {
+
+				/*
+				FT total_weight = FT(0);
+				for (size_t i = 0; i < polyhedrons.size(); ++i) {
+					
+					Polyhedron &polyhedron = polyhedrons[i];
+					total_weight += polyhedron.weight;
+				}
+
+				for (size_t i = 0; i < polyhedrons.size(); ++i)
+					polyhedrons[i].weight /= total_weight; */
 
 				for (size_t i = 0; i < polyhedrons.size(); ++i) {
 					pNodes[i] = graph->add_node();
@@ -131,21 +142,37 @@ namespace CGAL {
 					const FT in  = polyhedron.in;
 					const FT out = polyhedron.out;
 
+					// std::cout << "nodes: " << in << " : " << out << std::endl;
+
 					CGAL_precondition(in  >= FT(0) && in  <= FT(1));
 					CGAL_precondition(out >= FT(0) && out <= FT(1));
 
-					const FT cost_in  = get_graph_node_cost(in , polyhedron);
-					const FT cost_out = get_graph_node_cost(out, polyhedron);
+					const FT node_weight = polyhedron.weight;
+					CGAL_precondition(node_weight >= FT(0));
+
+					const FT cost_in  = get_graph_node_cost(in , node_weight);
+					const FT cost_out = get_graph_node_cost(out, node_weight);
 
 					graph->add_tweights(pNodes[i], CGAL::to_double(cost_in), CGAL::to_double(cost_out));
 				}
 			}
 
-			FT get_graph_node_cost(const FT node_value, const Polyhedron &polyhedron) const {
-				return polyhedron.weight * node_value;
+			FT get_graph_node_cost(const FT node_value, const FT node_weight) const {
+				return node_weight * node_value;
 			} 
 
-			void set_graph_edges(const Graphcut_facets &graphcut_facets, const Node_id *pNodes, Graph *graph) const {
+			void set_graph_edges(Graphcut_facets &graphcut_facets, const Node_id *pNodes, Graph *graph) const {
+
+				/*
+				FT total_weight = FT(0);
+				for (size_t i = 0; i < graphcut_facets.size(); ++i) {
+					
+					Graphcut_facet &graphcut_facet = graphcut_facets[i];
+					total_weight += graphcut_facet.weight;
+				}
+
+				for (size_t i = 0; i < graphcut_facets.size(); ++i)
+					graphcut_facets[i].weight /= total_weight; */
 
 				for (size_t i = 0; i < graphcut_facets.size(); ++i) {
 					
@@ -164,7 +191,7 @@ namespace CGAL {
 					const FT edge_quality = graphcut_facet.quality;
 
 					CGAL_precondition(edge_weight  >= FT(0));
-					CGAL_precondition(edge_quality >= FT(0));
+					CGAL_precondition(edge_quality >= FT(0) && edge_quality <= FT(1));
 
 					add_graph_edge(pNodes, polyhedron_index_1, polyhedron_index_2, edge_weight, edge_quality, graph);
 				}
@@ -183,7 +210,13 @@ namespace CGAL {
 			}
 
 			FT get_graph_edge_cost(const FT edge_weight, const FT edge_quality) const {
-				return m_beta * edge_weight * edge_quality;
+				return m_beta * edge_weight; // * inverse(edge_quality);
+			}
+
+			FT inverse(const FT value) const {
+				
+				CGAL_precondition(value >= FT(0) && value <= FT(1));
+				return FT(1) - value;
 			}
 
 			void set_solution(const Node_id *pNodes, Graph *graph, Polyhedrons &polyhedrons) const {
