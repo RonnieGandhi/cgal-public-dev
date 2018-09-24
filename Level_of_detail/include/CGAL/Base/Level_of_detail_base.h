@@ -149,6 +149,8 @@ namespace CGAL {
 			typedef typename Traits::Coplanar_facets_detector 				   Coplanar_facets_detector;
 			typedef typename Traits::Facets_cleaner 						   Facets_cleaner;
 			typedef typename Traits::Coplanar_facets_merger   	 			   Coplanar_facets_merger;
+			
+			typedef typename Traits::Roof_partitioning Roof_partitioning;
 
 			typedef typename Traits::Triangulation_based_boundary_extractor Triangulation_based_boundary_extractor;
 
@@ -1449,6 +1451,19 @@ namespace CGAL {
 				}
 			}
 
+			void applying_roof_partitioning(const FT ground_height, Buildings &buildings, const size_t exec_step) {
+				
+				// Apply roof partitioning.
+				std::cout << "(" << exec_step << ") applying 3D roof partitioning;" << std::endl;
+
+				Roof_partitioning roof_partitioning = Roof_partitioning(ground_height, buildings);
+				roof_partitioning.create();
+
+				if (!m_silent) {
+					Log exporter; exporter.save_building_roofs_without_faces(buildings, "tmp" + std::string(PSR) + "lod_2" + std::string(PSR) + "7_roof_partitioning", true);
+				}
+			}
+
 			void creating_3d_partitioning_input(const FT ground_height, Buildings &buildings, const size_t exec_step) {
 				
 				// Create 3D partitioning input.
@@ -1803,6 +1818,12 @@ namespace CGAL {
 				// (06) ----------------------------------
 				merging_coplanar_input_walls(buildings, ++exec_step);
 
+
+				// (07) ----------------------------------
+				applying_roof_partitioning(ground_height, buildings, ++exec_step);
+
+
+				return;
 
 				// (07) ----------------------------------
 				creating_3d_partitioning_input(ground_height, buildings, ++exec_step);

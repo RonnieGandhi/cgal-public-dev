@@ -68,6 +68,8 @@
 #include <CGAL/Lod_2/Level_of_detail_coplanar_facets_merger_step_14.h>
 #include <CGAL/Lod_2/Level_of_detail_lod2_from_kinetic_reconstruction_step_15.h>
 
+#include <CGAL/Lod_2/Test_algorithms/Level_of_detail_roof_partitioning_test.h>
+
 namespace CGAL {
 
 	namespace LOD {
@@ -201,6 +203,8 @@ namespace CGAL {
 			typedef CGAL::LOD::Level_of_detail_coplanar_facets_detector_step_13<Kernel, Building, Buildings> 	  		  		 	  Coplanar_facets_detector;
 			typedef CGAL::LOD::Level_of_detail_coplanar_facets_merger_step_14<Kernel, Building, Buildings> 	  		  		 		  Coplanar_facets_merger;
 			typedef CGAL::LOD::Level_of_detail_lod2_from_kinetic_reconstruction_step_15<Kernel, CDT, Building, Buildings, Mesh> 	  Kinetic_LOD2_reconstruction;
+
+			typedef CGAL::LOD::Level_of_detail_roof_partitioning_test<Kernel, Building, Buildings> Roof_partitioning;
 
 			typedef CGAL::LOD::Level_of_detail_triangulation_based_boundary_extractor<Kernel, Container_3D, CDT> Triangulation_based_boundary_extractor;
 		};

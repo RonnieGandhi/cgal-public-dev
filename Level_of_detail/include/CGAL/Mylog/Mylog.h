@@ -165,6 +165,65 @@ namespace CGAL {
 				save(file_name, ".ply");
 			}
 
+			template<class Data>
+			void export_partitioning_data_structure(const Data &data, const std::string filename, const bool show_all) {
+				
+				clear();
+
+				size_t num_vertices = 0;
+				size_t num_facets	= 0;
+
+				for (size_t i = 0; i < data.polygons.size(); ++i) {
+					const auto &polygon = data.polygons[i];
+
+					if (!show_all && !polygon.propagate) 
+						continue;
+
+					for (size_t j = 0; j < polygon.data.size(); ++j)
+						++num_vertices;
+					++num_facets;
+				}
+
+				out << 
+				"ply" + std::string(PN) + ""               					     << 
+				"format ascii 1.0"  + std::string(PN) + ""     				     << 
+				"element vertex "        				   << num_vertices  << "" + std::string(PN) + "" << 
+				"property double x" + std::string(PN) + ""    				     << 
+				"property double y" + std::string(PN) + ""    				     << 
+				"property double z" + std::string(PN) + "" 					     <<
+				"element face " 						   << num_facets    << "" + std::string(PN) + "" << 
+				"property list uchar int vertex_indices" + std::string(PN) + ""  <<
+				"property uchar red"   + std::string(PN) + "" 				     <<
+				"property uchar green" + std::string(PN) + "" 				     <<
+				"property uchar blue"  + std::string(PN) + "" 				     <<
+				"end_header" + std::string(PN) + "";
+
+				for (size_t i = 0; i < data.polygons.size(); ++i) {
+					const auto &polygon = data.polygons[i];
+
+					if (!show_all && !polygon.propagate) 
+						continue;
+
+					for (size_t j = 0; j < polygon.data.size(); ++j)
+						out << polygon.data[j] << std::endl;
+				}
+
+				size_t count = 0;
+				for (size_t i = 0; i < data.polygons.size(); ++i) {
+					const auto &polygon = data.polygons[i];
+
+					if (!show_all && !polygon.propagate) 
+						continue;
+
+					out << polygon.data.size() << " ";
+					for (size_t j = 0; j < polygon.data.size(); ++j)
+						out << count++ << " ";
+					out << generate_random_color() << std::endl;
+				}
+
+				save(filename, ".ply");
+			}
+
 			template<class Buildings>
 			void save_graphcut_facets(const Buildings &buildings, const std::string file_name) {
 				
