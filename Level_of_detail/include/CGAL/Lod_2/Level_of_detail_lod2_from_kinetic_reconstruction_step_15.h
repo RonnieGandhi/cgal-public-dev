@@ -73,7 +73,7 @@ namespace CGAL {
 			m_ground_height(ground_height),
 			m_facet_colors(facet_colors),
     		m_index_counter(0),
-			m_tolerance(FT(1) / FT(10000)) { }
+			m_tolerance(FT(1) / FT(100000)) { }
 
 			void operator()(HDS &hds) {
 				
@@ -296,7 +296,9 @@ namespace CGAL {
             bool is_vertical_facet(const Clean_facet &vertices) const {
 
 				Vector_3 facet_normal;
-				set_facet_normal(vertices, facet_normal);
+				const bool success = set_facet_normal(vertices, facet_normal);
+
+				if (!success) return false;
 
 				Vector_3 ground_normal;
 				set_ground_normal(ground_normal);
@@ -308,41 +310,39 @@ namespace CGAL {
                 return false;
             }
 
-            void set_facet_normal(const Clean_facet &vertices, Vector_3 &facet_normal) const {
+            bool set_facet_normal(const Clean_facet &vertices, Vector_3 &facet_normal) const {
                 
-				Point_3 p1 = vertices[0];
-                Point_3 p2 = vertices[1];
-                Point_3 p3 = vertices[2];
-					
-				clean_points(vertices, p1, p2, p3);
+                CGAL_precondition(vertices.size() >= 3);
 
-				/*
-				std::cout << "p: " << p1 << std::endl;
-				std::cout << "p: " << p2 << std::endl;
-				std::cout << "p: " << p3 << std::endl; */
+                const Vector_3 zero = Vector_3(FT(0), FT(0), FT(0));
+                for (size_t i = 0; i < vertices.size(); ++i) {
 
-                const Vector_3 v1 = Vector_3(p1, p2);
-                const Vector_3 v2 = Vector_3(p1, p3);
+                    const size_t ip  = (i + 1) % vertices.size();
+                    const size_t ipp = (i + 2) % vertices.size();
+                    
+                    const Point_3 &p1 = vertices[i];
+                    const Point_3 &p2 = vertices[ip];
+                    const Point_3 &p3 = vertices[ipp];
 
-                facet_normal = cross_product_3(v1, v2);
-                normalize(facet_normal);
+                    const Vector_3 v1 = Vector_3(p2, p1);
+                    const Vector_3 v2 = Vector_3(p2, p3);
+
+                    facet_normal = cross_product_3(v1, v2);
+                    if (!are_equal_points(facet_normal, zero)) {
+                     
+                        normalize(facet_normal);
+                        return true;
+                    }
+                }
+                return false;
 			}
 
-			void clean_points(const Clean_facet &vertices, const Point_3 &p1, const Point_3 &p2, Point_3 &p3) const {
-				
-				for (size_t i = 0; i < vertices.size(); ++i) {
-					const Point_3 &p = vertices[i];
+            template<class Point>
+            bool are_equal_points(const Point &p, const Point &q) const {
 
-					if (vertices.size() > 3 && CGAL::abs(p1.x() - p2.x()) < m_tolerance && CGAL::abs(p2.x() - p3.x()) < m_tolerance)
-						p3 = p;
-
-					if (vertices.size() > 3 && CGAL::abs(p1.y() - p2.y()) < m_tolerance && CGAL::abs(p2.y() - p3.y()) < m_tolerance)
-						p3 = p;
-
-					if (vertices.size() > 3 && CGAL::abs(p1.z() - p2.z()) < m_tolerance && CGAL::abs(p2.z() - p3.z()) < m_tolerance)
-						p3 = p;
-				}
-			}
+                const FT eps = m_tolerance;
+                return (CGAL::abs(p.x() - q.x()) < eps) && (CGAL::abs(p.y() - q.y()) < eps) && (CGAL::abs(p.z() - q.z()) < eps);
+            }
 
 			void set_ground_normal(Vector_3 &ground_normal) const {
 				ground_normal = Vector_3(FT(0), FT(0), FT(1));
@@ -395,7 +395,7 @@ namespace CGAL {
 				}
 				
 				average_height /= static_cast<FT>(clean_facet.size());
-				return CGAL::abs(average_height - m_ground_height) < m_tolerance;
+				return CGAL::abs(average_height - m_ground_height) < m_tolerance * FT(100);
 			}
 
 			void add_ground(Builder &builder) {

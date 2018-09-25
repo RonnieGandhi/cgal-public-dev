@@ -1820,12 +1820,6 @@ namespace CGAL {
 
 
 				// (07) ----------------------------------
-				applying_roof_partitioning(ground_height, buildings, ++exec_step);
-
-
-				return;
-
-				// (07) ----------------------------------
 				creating_3d_partitioning_input(ground_height, buildings, ++exec_step);
 
 

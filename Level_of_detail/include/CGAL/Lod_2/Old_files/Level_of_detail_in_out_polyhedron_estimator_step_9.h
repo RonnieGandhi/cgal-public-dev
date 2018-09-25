@@ -86,9 +86,7 @@ namespace CGAL {
             m_height_offset(FT(1) / FT(8)),
             m_bc_tolerance_top(FT(6) / FT(5)),
             m_bc_tolerance_bottom(-FT(1) / FT(5)),
-            m_default_weight(FT(1)),
-            m_tolerance(FT(1) / FT(100000)),
-            m_normalize_weights(false)
+            m_default_weight(FT(1000000))
             { }
 
             void estimate() {
@@ -103,9 +101,6 @@ namespace CGAL {
 
                         compute_building_maximum_height(building);
                         process_building(building);
-
-                        if (m_normalize_weights)
-                            normalize_weights(building);
                     }
                 }
             }
@@ -123,9 +118,6 @@ namespace CGAL {
             const FT m_bc_tolerance_bottom;
 
             const FT m_default_weight;
-            const FT m_tolerance;
-
-            const bool m_normalize_weights;
 
             void compute_building_maximum_height(Building &building) const {
 
@@ -287,7 +279,7 @@ namespace CGAL {
                 }
                 process_middle_plane(polyhedron, tmp_indices, in, out);
                 
-                if (in == 0 && out == 0) return std::make_pair(FT(1) / FT(5), FT(4) / FT(5));
+                if (in == 0 && out == 0) return std::make_pair(FT(1) / FT(2), FT(1) / FT(2));
 
                 const FT tmp_in  = static_cast<FT>(in);
                 const FT tmp_out = static_cast<FT>(out);
@@ -304,9 +296,7 @@ namespace CGAL {
             bool is_vertical_facet(const Vertices &vertices, const Facet &facet) const {
 
 				Vector_3 facet_normal;
-				const bool success = set_facet_normal(vertices, facet, facet_normal);
-
-                if (!success) return true;
+				set_facet_normal(vertices, facet, facet_normal);
 
 				Vector_3 ground_normal;
 				set_ground_normal(ground_normal);
@@ -318,43 +308,19 @@ namespace CGAL {
                 return false;
             }
 
-            bool set_facet_normal(const Vertices &vertices, const Facet &facet, Vector_3 &facet_normal) const {
+            void set_facet_normal(const Vertices &vertices, const Facet &facet, Vector_3 &facet_normal) const {
 
                 CGAL_precondition(facet.indices.size() >= 3);
+                const Point_3 &p1 = vertices[facet.indices[0]];
+                const Point_3 &p2 = vertices[facet.indices[1]];
+                const Point_3 &p3 = vertices[facet.indices[2]];
 
-                const Vector_3 zero = Vector_3(FT(0), FT(0), FT(0));
-                for (size_t i = 0; i < facet.indices.size(); ++i) {
+                const Vector_3 v1 = Vector_3(p1, p2);
+                const Vector_3 v2 = Vector_3(p1, p3);
 
-                    const size_t ip  = (i + 1) % facet.indices.size();
-                    const size_t ipp = (i + 2) % facet.indices.size();
-                    
-                    const Point_3 &p1 = vertices[facet.indices[i]];
-                    const Point_3 &p2 = vertices[facet.indices[ip]];
-                    const Point_3 &p3 = vertices[facet.indices[ipp]];
-
-                    const Vector_3 v1 = Vector_3(p2, p1);
-                    const Vector_3 v2 = Vector_3(p2, p3);
-
-                    facet_normal = cross_product_3(v1, v2);
-                    if (!are_equal_points(facet_normal, zero)) {
-                     
-                        normalize(facet_normal);
-                        return true;
-                    }
-                }
-                return false;
+                facet_normal = cross_product_3(v1, v2);
+                normalize(facet_normal);
 			}
-
-            template<class Point>
-            bool are_equal_points(const Point &p, const Point &q) const {
-
-                const FT eps = m_tolerance;
-                return (CGAL::abs(p.x() - q.x()) < eps) && (CGAL::abs(p.y() - q.y()) < eps) && (CGAL::abs(p.z() - q.z()) < eps);
-            }
-
-            void normalize(Vector_3 &v) const {
-                v /= static_cast<FT>(CGAL::sqrt(CGAL::to_double(v.squared_length())));
-            }
 
 			void set_ground_normal(Vector_3 &ground_normal) const {
 				ground_normal = Vector_3(FT(0), FT(0), FT(1));
@@ -375,15 +341,11 @@ namespace CGAL {
                 return angle_deg;
 			}
 
+            void normalize(Vector_3 &v) const {
+                v /= static_cast<FT>(CGAL::sqrt(CGAL::to_double(v.squared_length())));
+            }
+
             void process_facet(const Vertices &vertices, const Facet &facet, const Building &building, Indices &tmp_indices, size_t &in, size_t &out) const {
-
-                Polygon polygon;
-                create_polygon(vertices, facet, polygon);
-
-                if (!CGAL::is_simple_2(polygon.begin(), polygon.end())) 
-                    return;
-
-                Mean_value_coordinates mean_value_coordinates(polygon.begin(), polygon.end());
 
                 const Indices &interior_indices = building.interior_indices;
                 for (size_t i = 0; i < interior_indices.size(); ++i) {
@@ -391,113 +353,13 @@ namespace CGAL {
                     const Index point_index = interior_indices[i];
                     const Point_3 &p = m_input.point(point_index);
 
-                    const FT height = intersect_facet(mean_value_coordinates, vertices, facet, p);
+                    const FT height = intersect_facet(vertices, facet, p);
                     if (height == m_big_value) continue;
                     
                     tmp_indices.push_back(point_index);
                     if (is_inside_building(height, p.z())) ++in;
                     else ++out;
                 }
-            }
-
-            void create_polygon(const Vertices &vertices, const Facet &facet, Polygon &polygon) const {
-
-                polygon.clear();
-                polygon.resize(facet.indices.size());
-
-                for (size_t i = 0; i < facet.indices.size(); ++i) {
-                    
-                    const Point_3 &p = vertices[facet.indices[i]];
-                    polygon[i] = Point_2(p.x(), p.y());
-                }
-            }
-
-            FT intersect_facet(Mean_value_coordinates &mean_value_coordinates, const Vertices &vertices, const Facet &facet, const Point_3 &p) const {
-
-                const Point_2 query = Point_2(p.x(), p.y());
-
-                Coordinates coordinates;
-                mean_value_coordinates(query, std::back_inserter(coordinates));
-            
-                if (is_inside_polygon(coordinates)) return intersect_line_and_plane(vertices, facet, p);
-                return m_big_value;
-            }
-
-            bool is_inside_polygon(const Coordinates &coordinates) const {
-
-                CGAL_precondition(coordinates.size() >= 3);
-
-                for (size_t i = 0 ; i < coordinates.size(); ++i)
-                    if (coordinates[i] <= FT(0) || coordinates[i] >= FT(1)) return false;
-                return true;
-            }
-
-            FT intersect_line_and_plane(const Vertices &vertices, const Facet &facet, const Point_3 &p) const {
-
-                Line_3 line;
-                create_line(p, line);
-
-                Plane_3 plane;
-                const bool success = create_plane(vertices, facet, plane);
-
-                if (!success) 
-                    return m_big_value;
-
-                return intersect(line, plane);
-            }
-
-            void create_line(const Point_3 &p, Line_3 &line) const {
-                
-                const Point_3 p1 = Point_3(p.x(), p.y(), m_ground_height - FT(10));
-                const Point_3 p2 = Point_3(p.x(), p.y(), m_ground_height + FT(10));
-
-                line = Line_3(p1, p2);
-            }
-
-            bool create_plane(const Vertices &vertices, const Facet &facet, Plane_3 &plane) const {
-
-                CGAL_precondition(facet.indices.size() >= 3);
-
-                const Vector_3 zero = Vector_3(FT(0), FT(0), FT(0));
-                for (size_t i = 0; i < facet.indices.size(); ++i) {
-
-                    const size_t ip  = (i + 1) % facet.indices.size();
-                    const size_t ipp = (i + 2) % facet.indices.size();
-                    
-                    const Point_3 &p1 = vertices[facet.indices[i]];
-                    const Point_3 &p2 = vertices[facet.indices[ip]];
-                    const Point_3 &p3 = vertices[facet.indices[ipp]];
-
-                    const Vector_3 v1 = Vector_3(p2, p1);
-                    const Vector_3 v2 = Vector_3(p2, p3);
-
-                    const Vector_3 normal = cross_product_3(v1, v2);
-                    if (!are_equal_points(normal, zero)) {
-                     
-                        plane = Plane_3(p1, p2, p3);
-                        return true;
-                    }
-                }
-                return false;
-            }
-
-            FT intersect(const Line_3 &line, const Plane_3 &plane) const {
-
-				typename CGAL::cpp11::result_of<Intersect(Line_3, Plane_3)>::type result = intersection(line, plane);
-                
-                if (result) {
-
-                    if (const Line_3 *tmp = boost::get<Line_3>(&*result)) return m_big_value;
-                    else {
-                        const Point_3 *point = boost::get<Point_3>(&*result);
-				        return (*point).z();
-                    }
-                }
-                return m_big_value;
-            }
-
-            bool is_inside_building(const FT current_height, const FT real_height) const {
-                return current_height > m_ground_height - m_height_offset && current_height < real_height + m_height_offset;
             }
 
             void process_middle_plane(const Polyhedron &polyhedron, const Indices &indices, size_t &in, size_t &out) const {
@@ -521,7 +383,100 @@ namespace CGAL {
                 }
             }
 
+            FT intersect_facet(const Vertices &vertices, const Facet &facet, const Point_3 &query) const {
+
+                Polygon polygon;
+                create_polygon(vertices, facet, polygon);
+                if (!CGAL::is_simple_2(polygon.begin(), polygon.end())) return m_big_value;
+
+                const Point_2 p = Point_2(query.x(), query.y());
+
+                Coordinates coordinates;
+                compute_barycentric_coordinates(polygon, p, coordinates);
+            
+                if (is_inside_polygon(coordinates)) return intersect_line_and_plane(vertices, facet, query);
+                return m_big_value;
+            }
+
+            void create_polygon(const Vertices &vertices, const Facet &facet, Polygon &polygon) const {
+
+                polygon.clear();
+                polygon.resize(facet.indices.size());
+
+                for (size_t i = 0; i < facet.indices.size(); ++i) {
+                    
+                    const Point_3 &p = vertices[facet.indices[i]];
+                    polygon[i] = Point_2(p.x(), p.y());
+                }
+            }
+
+            void compute_barycentric_coordinates(const Polygon &polygon, const Point_2 &query, Coordinates &coordinates) const {
+
+                coordinates.clear();
+                Mean_value_coordinates mean_value_coordinates(polygon.begin(), polygon.end());
+                mean_value_coordinates(query, std::back_inserter(coordinates));
+            }
+
+            bool is_inside_building(const FT current_height, const FT real_height) const {
+                return current_height < real_height + m_height_offset;
+            }
+
+            bool is_inside_polygon(const Coordinates &coordinates) const {
+
+                CGAL_precondition(coordinates.size() >= 3);
+
+                for (size_t i = 0 ; i < coordinates.size(); ++i)
+                    if (coordinates[i] <= FT(0) || coordinates[i] >= FT(1)) return false;
+                return true;
+            }
+
+            FT intersect_line_and_plane(const Vertices &vertices, const Facet &facet, const Point_3 &query) const {
+
+                Line_3 line;
+                create_line(query, line);
+
+                Plane_3 plane;
+                create_plane(vertices, facet, plane);
+
+                return intersect(line, plane);
+            }
+
+            void create_line(const Point_3 &query, Line_3 &line) const {
+                
+                const Point_3 p1 = Point_3(query.x(), query.y(), m_ground_height - FT(10));
+                const Point_3 p2 = Point_3(query.x(), query.y(), m_ground_height + FT(10));
+
+                line = Line_3(p1, p2);
+            }
+
+            void create_plane(const Vertices &vertices, const Facet &facet, Plane_3 &plane) const {
+
+                CGAL_precondition(facet.indices.size() >= 3);
+                const Point_3 &p1 = vertices[facet.indices[0]];
+                const Point_3 &p2 = vertices[facet.indices[1]];
+                const Point_3 &p3 = vertices[facet.indices[2]];
+
+                plane = Plane_3(p1, p2, p3);
+            }
+
+            FT intersect(const Line_3 &line, const Plane_3 &plane) const {
+
+				typename CGAL::cpp11::result_of<Intersect(Line_3, Plane_3)>::type result = intersection(line, plane);
+                
+                if (result) {
+
+                    if (const Line_3 *tmp = boost::get<Line_3>(&*result)) return m_big_value;
+                    else {
+                        const Point_3 *point = boost::get<Point_3>(&*result);
+				        return (*point).z();
+                    }
+                }
+                return m_big_value;
+            }
+
             FT compute_weight(const Polyhedron &polyhedron) const {
+                
+                // return get_default_weight();
 
                 const FT weight = compute_volume(polyhedron);
                 return get_weight(weight);
@@ -560,22 +515,6 @@ namespace CGAL {
 
             FT get_weight(const FT weight) const {
                 return weight;
-            }
-
-            void normalize_weights(Building &building) const {
-
-				/*
-				FT total_weight = FT(0);
-				for (size_t i = 0; i < polyhedrons.size(); ++i) {
-					
-					Polyhedron &polyhedron = polyhedrons[i];
-					total_weight += polyhedron.weight;
-				}
-
-				for (size_t i = 0; i < polyhedrons.size(); ++i)
-					polyhedrons[i].weight /= total_weight; */
-
-                // finish it!
             }
         };
 

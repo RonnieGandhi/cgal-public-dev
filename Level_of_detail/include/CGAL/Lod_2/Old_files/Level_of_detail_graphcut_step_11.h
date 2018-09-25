@@ -43,11 +43,13 @@ namespace CGAL {
 			using Neighbours = typename Graphcut_facet::Data_pair;
 
 			Level_of_detail_graphcut_step_11() : 
-			m_beta(FT(1) / FT(10)),
+			m_beta(FT(0.1)),
 			m_run_test(false)
 			{ }
 
-			void set_beta(const FT) { }
+			void set_beta(const FT beta) {
+				
+			}
 
 			void solve(Buildings &buildings) const {
 
@@ -121,6 +123,17 @@ namespace CGAL {
 
 			void set_graph_nodes(Polyhedrons &polyhedrons, Node_id *pNodes, Graph *graph) const {
 
+				/*
+				FT total_weight = FT(0);
+				for (size_t i = 0; i < polyhedrons.size(); ++i) {
+					
+					Polyhedron &polyhedron = polyhedrons[i];
+					total_weight += polyhedron.weight;
+				}
+
+				for (size_t i = 0; i < polyhedrons.size(); ++i)
+					polyhedrons[i].weight /= total_weight; */
+
 				for (size_t i = 0; i < polyhedrons.size(); ++i) {
 					pNodes[i] = graph->add_node();
 
@@ -128,6 +141,8 @@ namespace CGAL {
 
 					const FT in  = polyhedron.in;
 					const FT out = polyhedron.out;
+
+					// std::cout << "nodes: " << in << " : " << out << std::endl;
 
 					CGAL_precondition(in  >= FT(0) && in  <= FT(1));
 					CGAL_precondition(out >= FT(0) && out <= FT(1));
@@ -148,6 +163,17 @@ namespace CGAL {
 
 			void set_graph_edges(Graphcut_facets &graphcut_facets, const Node_id *pNodes, Graph *graph) const {
 
+				/*
+				FT total_weight = FT(0);
+				for (size_t i = 0; i < graphcut_facets.size(); ++i) {
+					
+					Graphcut_facet &graphcut_facet = graphcut_facets[i];
+					total_weight += graphcut_facet.weight;
+				}
+
+				for (size_t i = 0; i < graphcut_facets.size(); ++i)
+					graphcut_facets[i].weight /= total_weight; */
+
 				for (size_t i = 0; i < graphcut_facets.size(); ++i) {
 					
 					const Graphcut_facet &graphcut_facet = graphcut_facets[i];
@@ -159,7 +185,7 @@ namespace CGAL {
 					const int polyhedron_index_1 = neigh_1.first;
 					const int polyhedron_index_2 = neigh_2.first;
 
-					if (polyhedron_index_1 < 0 || polyhedron_index_2 < 0) continue; // remove boundary facets
+					if (polyhedron_index_1 < 0 || polyhedron_index_2 < 0) continue;
 
 					const FT edge_weight  = graphcut_facet.weight;
 					const FT edge_quality = graphcut_facet.quality;
@@ -183,8 +209,15 @@ namespace CGAL {
 				graph->add_edge(pNodes[i], pNodes[j], CGAL::to_double(cost_value), CGAL::to_double(cost_value));
 			}
 
-			FT get_graph_edge_cost(const FT edge_weight, const FT) const {
-				return m_beta * edge_weight;
+			FT get_graph_edge_cost(const FT edge_weight, const FT edge_quality) const {
+				// std::cout << edge_weight << std::endl;
+				return m_beta * edge_weight; // * inverse(edge_quality);
+			}
+
+			FT inverse(const FT value) const {
+				
+				CGAL_precondition(value >= FT(0) && value <= FT(1));
+				return FT(1) - value;
 			}
 
 			void set_solution(const Node_id *pNodes, Graph *graph, Polyhedrons &polyhedrons) const {
