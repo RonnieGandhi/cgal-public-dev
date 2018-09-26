@@ -87,6 +87,8 @@ namespace CGAL {
 			
 			int index 	   = -1;
 			int roof_index = -1;
+
+			CGAL::Color tag_color = CGAL::Color(255, 205, 0);
 		};
 
 		// Vertex info class.

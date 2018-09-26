@@ -285,7 +285,8 @@ namespace CGAL {
 			m_regularize_3d(false),
 			m_use_extra_boundary_extraction(false),
 			m_regularization_angle_3d(FT(25)),
-			m_kinetic_number_of_intersections(1)
+			m_kinetic_number_of_intersections(1),
+			m_use_merged_facets(false)
 			{ }
 
 
@@ -516,6 +517,8 @@ namespace CGAL {
 
 				m_regularization_angle_3d 		  = FT(25);
 				m_kinetic_number_of_intersections = 1;
+
+				m_use_merged_facets = false;
 			}
 
 			void set_the_most_important_options() {
@@ -600,6 +603,8 @@ namespace CGAL {
 
 				add_bool_parameter("-regularize_3d" , m_regularize_3d				 , m_parameters);
 				add_bool_parameter("-extra_boundary", m_use_extra_boundary_extraction, m_parameters);
+
+				add_bool_parameter("-merge", m_use_merged_facets, m_parameters);
 
 				// Important.
 				add_val_parameter("-eps"  , m_imp_eps  , m_parameters);
@@ -1574,6 +1579,8 @@ namespace CGAL {
 				std::cout << "(" << exec_step << ") merging coplanar facets;" << std::endl;
 
 				Coplanar_facets_merger coplanar_facets_merger = Coplanar_facets_merger(buildings);
+				
+				coplanar_facets_merger.use_merged_facets(m_use_merged_facets);
 				coplanar_facets_merger.merge();
 
 				if (!m_silent) {
@@ -2216,6 +2223,8 @@ namespace CGAL {
 
 			FT  m_regularization_angle_3d;
 			int m_kinetic_number_of_intersections;
+
+			bool m_use_merged_facets;
 
 
 			// Assert default values of all global parameters.

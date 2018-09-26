@@ -7,6 +7,7 @@
 #include <vector>
 
 // CGAL includes.
+#include <CGAL/IO/Color.h>
 #include <CGAL/number_utils.h>
 
 // New CGAL includes.
@@ -25,14 +26,16 @@ namespace CGAL {
             using Input  = InputContainer;
             using CDT    = InputCDT;
 
-			using FT      = typename Kernel::FT;
-            using Point_2 = typename Kernel::Point_2;
-            using Point_3 = typename Kernel::Point_3;
+			using FT         = typename Kernel::FT;
+            using Point_2    = typename Kernel::Point_2;
+            using Point_3    = typename Kernel::Point_3;
+            using Triangle_2 = typename Kernel::Triangle_2;
 
             using Edge              = typename CDT::Edge;
             using Face_handle       = typename CDT::Face_handle;
             using Vertex_handle     = typename CDT::Vertex_handle;
             using Edges_iterator    = typename CDT::Finite_edges_iterator;
+            using Faces_iterator    = typename CDT::Finite_faces_iterator;
             using Vertices_iterator = typename CDT::Finite_vertices_iterator;
             using Vertex_circulator = typename CDT::Vertex_circulator;
 
@@ -49,23 +52,32 @@ namespace CGAL {
             typename Kernel::Compute_squared_distance_3 squared_distance_3;
 
             using Queue = std::queue<Vertex_handle>;
+            using Color = CGAL::Color;
 
 			Level_of_detail_triangulation_based_boundary_extractor(const Input &input, const Indices &boundary_indices, const Indices &interior_indices) :
             m_input(input),
             m_boundary_indices(boundary_indices),
             m_interior_indices(interior_indices),
+            m_area_threshold(FT(5) / FT(1000)),
             m_distance_threshold(FT(2)),
             m_use_std_method(false),
-            m_check_uniqueness(true)
+            m_check_uniqueness(true),
+            m_use_new_method(true)
             { }
 
             void extract(Projected_points &projected_points) const {
 
-                if (m_boundary_indices.size() != 0) return;
-
                 CDT cdt;
                 Queue queue;
                 create_cdt_and_queue(projected_points, cdt, queue);
+
+                if (m_use_new_method) {
+                    
+                    extract_boundary_points_from_cdt_facets(cdt, projected_points);
+                    return;
+                }
+
+                if (m_boundary_indices.size() != 0) return;
 
                 if (m_use_std_method) extract_boundary_points_from_cdt_vertices(cdt, projected_points);
                 else extract_boundary_points(cdt, queue, projected_points);
@@ -76,10 +88,12 @@ namespace CGAL {
             const Indices &m_boundary_indices;
             const Indices &m_interior_indices;
 
+            const FT m_area_threshold;
             const FT m_distance_threshold;
+            
             const bool m_use_std_method;
-
             const bool m_check_uniqueness;
+            const bool m_use_new_method;
 
             void create_cdt_and_queue(const Projected_points &projected_points, CDT &cdt, Queue &queue) const {
                 
@@ -242,7 +256,160 @@ namespace CGAL {
                 return true;
             }
 
-            /*
+            void extract_boundary_points_from_cdt_facets(const CDT &cdt, Projected_points &projected_points) const {
+                
+                tag_faces(cdt);
+                clean_faces(cdt);
+
+                create_points(cdt, projected_points);
+
+                if (false) 
+                    apply_alpha_shapes(projected_points);
+            }
+
+            void tag_faces(const CDT &cdt) const {
+
+                for (Faces_iterator fit = cdt.finite_faces_begin(); fit != cdt.finite_faces_end(); ++fit) {
+                    const Face_handle &fh = static_cast<Face_handle>(fit);
+
+                    if (is_boundary_face(fh)) {
+                        
+                        fh->info().is_valid  = true;
+                        fh->info().tag_color = Color(255, 0, 0);
+
+                    } else {
+                     
+                        fh->info().is_valid  = false;
+                        fh->info().tag_color = CGAL::Color(255, 205, 0);
+                    }
+                }
+
+                Log log;
+                log.save_cdt_ply(cdt, "tmp" + std::string(PSR) + "lod_0_1" + std::string(PSR) + "1_cdt_tagged", "tag");
+            }
+
+            bool is_boundary_face(const Face_handle &fh) const {
+
+                const Index i1 = fh->vertex(0)->info().index;
+                const Index i2 = fh->vertex(1)->info().index;
+                const Index i3 = fh->vertex(2)->info().index;
+
+                return face_should_be_added(i1, i2) || face_should_be_added(i2, i3) || face_should_be_added(i3, i1);
+            }
+
+            bool face_should_be_added(const Index index1, const Index index2) const {
+
+                if (index1 < 0 || index1 >= m_input.number_of_points()) return false;
+                if (index2 < 0 || index2 >= m_input.number_of_points()) return false;
+
+                const Point_3 &p1 = m_input.point(index1);
+                const Point_3 &p2 = m_input.point(index2);
+
+                const FT distance = static_cast<FT>(CGAL::sqrt(CGAL::to_double(squared_distance_3(p1, p2))));
+                return distance > m_distance_threshold / FT(2);
+            }
+
+            void clean_faces(const CDT &cdt) const {
+
+                close_gaps(cdt);
+                close_single_faces(cdt);
+
+                Log log;
+                log.save_cdt_ply(cdt, "tmp" + std::string(PSR) + "lod_0_1" + std::string(PSR) + "1_cdt_clean", "tag");
+            }
+
+            void close_gaps(const CDT &cdt) const {
+
+                for (Faces_iterator fit = cdt.finite_faces_begin(); fit != cdt.finite_faces_end(); ++fit) {
+                    const Face_handle &fh = static_cast<Face_handle>(fit);
+
+                    if (is_gap_face(fh)) {
+                        
+                        fh->info().is_valid  = true;
+                        fh->info().tag_color = Color(255, 0, 0);
+                    }
+                }
+            }
+
+            bool is_gap_face(const Face_handle &fh) const {
+
+                const Face_handle &fh1 = fh->neighbor(0);
+                const Face_handle &fh2 = fh->neighbor(1);
+                const Face_handle &fh3 = fh->neighbor(2);
+
+                return (fh1->info().is_valid && fh2->info().is_valid) || 
+                       (fh2->info().is_valid && fh3->info().is_valid) ||
+                       (fh3->info().is_valid && fh1->info().is_valid);
+            }
+
+            void close_single_faces(const CDT &cdt) const {
+
+                for (Faces_iterator fit = cdt.finite_faces_begin(); fit != cdt.finite_faces_end(); ++fit) {
+                    const Face_handle &fh = static_cast<Face_handle>(fit);
+
+                    if (is_single_face(fh)) {
+                        
+                        fh->info().is_valid  = false;
+                        fh->info().tag_color = CGAL::Color(255, 205, 0);
+                    }
+                }
+            }
+
+            bool is_single_face(const Face_handle &fh) const {
+
+                const Face_handle &fh1 = fh->neighbor(0);
+                const Face_handle &fh2 = fh->neighbor(1);
+                const Face_handle &fh3 = fh->neighbor(2);
+
+                return (!fh1->info().is_valid && !fh2->info().is_valid) ||
+                       (!fh2->info().is_valid && !fh3->info().is_valid) ||
+                       (!fh3->info().is_valid && !fh1->info().is_valid);
+            }
+
+            void create_points(const CDT &cdt, Projected_points &projected_points) const {
+
+                for (Faces_iterator fit = cdt.finite_faces_begin(); fit != cdt.finite_faces_end(); ++fit) {
+                    const Face_handle &fh = static_cast<Face_handle>(fit);
+
+                    if (is_valid_boundary_face(fh)) {
+
+                        const Vertex_handle &vh1 = fh->vertex(0);
+                        const Vertex_handle &vh2 = fh->vertex(1);
+                        const Vertex_handle &vh3 = fh->vertex(2);
+
+                        projected_points[vh1->info().index] = vh1->point();
+                        projected_points[vh2->info().index] = vh2->point();
+                        projected_points[vh3->info().index] = vh3->point();
+                    }
+                }
+            }
+
+            bool is_valid_boundary_face(const Face_handle &fh) const {
+
+                const Point_2 &p1 = fh->vertex(0)->point();
+                const Point_2 &p2 = fh->vertex(1)->point();
+                const Point_2 &p3 = fh->vertex(2)->point();
+
+                const Triangle_2 triangle = Triangle_2(p1, p2, p3);
+                return fh->info().is_valid && triangle.area() < m_area_threshold;
+            }
+
+            void apply_alpha_shapes(Projected_points &projected_points) const {
+
+                Alpha_shapes_extractor extractor;
+                extractor.set_alpha(FT(2));
+
+                Indices stub, result;
+                extractor.extract(m_input, stub, projected_points, result);
+
+                projected_points.clear();
+                for (size_t i= 0; i < result.size(); ++i) {
+                    
+                    const Point_3 &p = m_input.point(result[i]);
+                    projected_points[result[i]] = Point_2(p.x(), p.y());
+                }
+            }
+
             void extract_boundary_points_from_cdt_edges(const CDT &cdt, Projected_points &projected_points) const {
 
                 projected_points.clear();
@@ -282,22 +449,6 @@ namespace CGAL {
                     projected_points[ev2->info().index] = ev2->point();
                 }
             }
-
-            void apply_alpha_shapes(Projected_points &projected_points) const {
-
-                Alpha_shapes_extractor extractor;
-                extractor.set_alpha(FT(2));
-
-                Indices stub, result;
-                extractor.extract(m_input, stub, projected_points, result);
-
-                projected_points.clear();
-                for (size_t i= 0; i < result.size(); ++i) {
-                    
-                    const Point_3 &p = m_input.point(result[i]);
-                    projected_points[result[i]] = Point_2(p.x(), p.y());
-                }
-            } */
 		};
 
 	} // LOD

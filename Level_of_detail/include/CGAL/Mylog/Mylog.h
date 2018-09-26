@@ -1502,9 +1502,9 @@ namespace CGAL {
 				// "property uchar blue" + std::string(PN)  + "" 			   <<
 				"element face " 						   << number_of_faces << "" + std::string(PN) + "" << 
 				"property list uchar int vertex_indices" + std::string(PN) + "" <<
-				"property uchar red" + std::string(PN) + "" 					   <<
-				"property uchar green" + std::string(PN) + "" 				   <<
-				"property uchar blue" + std::string(PN) + "" 				   <<
+				"property uchar red" + std::string(PN)   + "" 				    <<
+				"property uchar green" + std::string(PN) + "" 				    <<
+				"property uchar blue" + std::string(PN)  + "" 				    <<
 				"end_header" + std::string(PN) + "";
 
 				typedef typename CDT::Vertex_handle Vertex_handle;
@@ -1523,8 +1523,9 @@ namespace CGAL {
 					
 					// out << generate_random_color() << std::endl;
 
-					if (color_type == "in") out << fit->info().in_color << std::endl;
-					if (color_type == "bu") out << fit->info().bu_color << std::endl;
+					if (color_type == "in")  out << fit->info().in_color  << std::endl;
+					if (color_type == "bu")  out << fit->info().bu_color  << std::endl;
+					if (color_type == "tag") out << fit->info().tag_color << std::endl;
 				}
 
 				save(filename, ".ply");

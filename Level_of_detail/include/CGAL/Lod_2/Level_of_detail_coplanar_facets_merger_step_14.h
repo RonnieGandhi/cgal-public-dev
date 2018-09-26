@@ -47,9 +47,13 @@ namespace CGAL {
                 }
             }
 
+            void use_merged_facets(const bool new_state) {
+                m_use_original_facets = !new_state;
+            }
+
         private:
             Buildings &m_buildings;
-            const bool m_use_original_facets;
+            bool m_use_original_facets;
 
             void process_building(Building &building) const {
 
