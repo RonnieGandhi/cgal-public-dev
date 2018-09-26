@@ -524,8 +524,8 @@ namespace CGAL {
 				m_imp_eps   = 3.2; // global distance to the optimal line, (meters)
 				m_imp_scale = 5.0; // global distance between adjacent points, (meters)
 
-				m_graph_cut_beta  = 100000.0; // controls how many red and green triangle we will get, (magic)
-				m_graph_cut_gamma = 10000.0;  // controls if we should keep constraints satisfied or not, it is the penalty, (magic)
+				m_graph_cut_beta  = 0.1; 	 // controls how many red and green triangle we will get, (magic)
+				m_graph_cut_gamma = 10000.0; // controls if we should keep constraints satisfied or not, it is the penalty, (magic)
 
 
 				// Less important.

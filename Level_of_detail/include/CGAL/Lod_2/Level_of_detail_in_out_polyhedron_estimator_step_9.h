@@ -88,7 +88,7 @@ namespace CGAL {
             m_bc_tolerance_bottom(-FT(1) / FT(5)),
             m_default_weight(FT(1)),
             m_tolerance(FT(1) / FT(100000)),
-            m_normalize_weights(false)
+            m_normalize_weights(true)
             { }
 
             void estimate() {
@@ -564,8 +564,9 @@ namespace CGAL {
 
             void normalize_weights(Building &building) const {
 
-				/*
 				FT total_weight = FT(0);
+                Polyhedrons &polyhedrons = building.polyhedrons;
+
 				for (size_t i = 0; i < polyhedrons.size(); ++i) {
 					
 					Polyhedron &polyhedron = polyhedrons[i];
@@ -573,9 +574,7 @@ namespace CGAL {
 				}
 
 				for (size_t i = 0; i < polyhedrons.size(); ++i)
-					polyhedrons[i].weight /= total_weight; */
-
-                // finish it!
+					polyhedrons[i].weight /= total_weight;
             }
         };
 

@@ -57,10 +57,9 @@ namespace CGAL {
             m_input(input),
             m_buildings(buildings),
             m_tolerance(FT(1) / FT(100000)),
-            m_edge_length_tolerance(FT(1) / FT(1000)),
             m_default_weight(FT(0)),
             m_default_quality(FT(1)),
-            m_normalize_weights(false)
+            m_normalize_weights(true)
             { }
 
 			void set_alpha(const FT ) { }
@@ -87,8 +86,6 @@ namespace CGAL {
             Buildings   &m_buildings;
 
             const FT m_tolerance;
-            const FT m_edge_length_tolerance;
-
             const FT m_default_weight;
             const FT m_default_quality;
 
@@ -393,18 +390,17 @@ namespace CGAL {
 
             void normalize_weights(Building &building) const {
                 
-                /*
 				FT total_weight = FT(0);
-				for (size_t i = 0; i < graphcut_facets.size(); ++i) {
+                Graphcut_facets &gc_facets = building.graphcut_facets;
+
+				for (size_t i = 0; i < gc_facets.size(); ++i) {
 					
-					Graphcut_facet &graphcut_facet = graphcut_facets[i];
-					total_weight += graphcut_facet.weight;
+					Graphcut_facet &gc_facet = gc_facets[i];
+					total_weight += gc_facet.weight;
 				}
 
-				for (size_t i = 0; i < graphcut_facets.size(); ++i)
-					graphcut_facets[i].weight /= total_weight; */
-
-                // finish it!
+				for (size_t i = 0; i < gc_facets.size(); ++i)
+					gc_facets[i].weight /= total_weight;
             }
         };
 

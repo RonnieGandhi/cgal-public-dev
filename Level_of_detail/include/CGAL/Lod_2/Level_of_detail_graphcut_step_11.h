@@ -44,10 +44,13 @@ namespace CGAL {
 
 			Level_of_detail_graphcut_step_11() : 
 			m_beta(FT(1) / FT(10)),
-			m_run_test(false)
+			m_run_test(false),
+			m_big_value(FT(100000000000000))
 			{ }
 
-			void set_beta(const FT) { }
+			void set_beta(const FT new_value) { 
+				m_beta = new_value;
+			}
 
 			void solve(Buildings &buildings) const {
 
@@ -68,6 +71,7 @@ namespace CGAL {
 		private:
 			FT m_beta;
 			const bool m_run_test;
+			const FT m_big_value;
 
 			void run_test() const {
 
@@ -106,11 +110,13 @@ namespace CGAL {
 
 				const unsigned int num_nodes = polyhedrons.size();
 
-				Node_id *pNodes = new Node_id[num_nodes];
+				Node_id *pNodes = new Node_id[num_nodes + 1]; // +1 gives an extra infinite node
 				Graph    *graph = new Graph();
 
+				const int inf_node_index = num_nodes;
+
 				set_graph_nodes(polyhedrons, pNodes, graph);
-				set_graph_edges(graphcut_facets, pNodes, graph);
+				set_graph_edges(inf_node_index, graphcut_facets, pNodes, graph);
 
 				graph->maxflow();
 				set_solution(pNodes, graph, polyhedrons);
@@ -122,8 +128,6 @@ namespace CGAL {
 			void set_graph_nodes(Polyhedrons &polyhedrons, Node_id *pNodes, Graph *graph) const {
 
 				for (size_t i = 0; i < polyhedrons.size(); ++i) {
-					pNodes[i] = graph->add_node();
-
 					const Polyhedron &polyhedron = polyhedrons[i];
 
 					const FT in  = polyhedron.in;
@@ -138,15 +142,26 @@ namespace CGAL {
 					const FT cost_in  = get_graph_node_cost(in , node_weight);
 					const FT cost_out = get_graph_node_cost(out, node_weight);
 
+					pNodes[i] = graph->add_node();
 					graph->add_tweights(pNodes[i], CGAL::to_double(cost_in), CGAL::to_double(cost_out));
 				}
+				set_infinite_node(polyhedrons.size(), pNodes, graph);
+			}
+
+			void set_infinite_node(const size_t node_index, Node_id *pNodes, Graph *graph) const {
+
+				const FT cost_in  = FT(0);
+				const FT cost_out = m_big_value;
+
+				pNodes[node_index] = graph->add_node();
+				graph->add_tweights(pNodes[node_index], CGAL::to_double(cost_in), CGAL::to_double(cost_out));
 			}
 
 			FT get_graph_node_cost(const FT node_value, const FT node_weight) const {
 				return node_weight * node_value;
 			} 
 
-			void set_graph_edges(Graphcut_facets &graphcut_facets, const Node_id *pNodes, Graph *graph) const {
+			void set_graph_edges(const int inf_node_index, Graphcut_facets &graphcut_facets, const Node_id *pNodes, Graph *graph) const {
 
 				for (size_t i = 0; i < graphcut_facets.size(); ++i) {
 					
@@ -156,11 +171,17 @@ namespace CGAL {
 					const Neighbour &neigh_1 = neighbours.first;
 					const Neighbour &neigh_2 = neighbours.second;
 
-					const int polyhedron_index_1 = neigh_1.first;
-					const int polyhedron_index_2 = neigh_2.first;
+					int polyhedron_index_1 = neigh_1.first;
+					int polyhedron_index_2 = neigh_2.first;
 
-					if (polyhedron_index_1 < 0 || polyhedron_index_2 < 0) continue; // remove boundary facets
+					// Boundary facets.
+					if (polyhedron_index_1 < 0 && polyhedron_index_2 >= 0)
+						polyhedron_index_1 = inf_node_index;
 
+					if (polyhedron_index_2 < 0 && polyhedron_index_1 >= 0)
+						polyhedron_index_2 = inf_node_index;
+
+					// Internal facets.
 					const FT edge_weight  = graphcut_facet.weight;
 					const FT edge_quality = graphcut_facet.quality;
 
