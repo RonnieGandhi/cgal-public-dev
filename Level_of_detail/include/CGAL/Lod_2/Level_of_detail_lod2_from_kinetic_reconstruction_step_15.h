@@ -286,8 +286,8 @@ namespace CGAL {
 				for (size_t i = 0; i < clean_facets.size(); ++i) {
 				
 					Color final_color;
-					if (is_vertical_facet(clean_facets[i])) final_color = Color(204, 102, 255); // Color(7, 64, 128); // Color(255, 255, 255);
-					else final_color = Color(204, 102, 255); // Color(254, 127, 4);
+					if (is_vertical_facet(clean_facets[i])) final_color = Color(255, 255, 255);
+					else final_color = Color(245, 121, 0);
 
 					add_clean_facet(clean_facets[i], final_color, builder);
 				}
@@ -382,7 +382,7 @@ namespace CGAL {
 				for (size_t i = 0; i < clean_facet.size(); ++i) builder.add_vertex_to_facet(m_index_counter++);
 				builder.end_facet();
 
-				m_facet_colors[cfh] = color; // clean_facet.second;
+				m_facet_colors[cfh] = color;
 			}
 
 			bool is_ground_facet(const Clean_facet &clean_facet) const {
@@ -400,7 +400,6 @@ namespace CGAL {
 
 			void add_ground(Builder &builder) {
 				
-				return;
 				assert(!m_ground.empty());
 
 				const size_t num_vertices = m_ground.size();
