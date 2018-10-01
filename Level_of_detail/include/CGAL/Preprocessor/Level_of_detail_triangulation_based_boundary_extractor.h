@@ -13,6 +13,7 @@
 // New CGAL includes.
 #include <CGAL/Mylog/Mylog.h>
 #include <CGAL/Preprocessor/Level_of_detail_interior_boundary_extractor.h>
+#include <CGAL/Region_growing/Level_of_detail_connected_component_region_growing.h>
 
 namespace CGAL {
 
@@ -54,6 +55,9 @@ namespace CGAL {
             using Queue = std::queue<Vertex_handle>;
             using Color = CGAL::Color;
 
+            using Components     = std::vector<Indices>;
+            using Region_growing = CGAL::LOD::Level_of_detail_connected_component_region_growing<Kernel, Input>;
+
 			Level_of_detail_triangulation_based_boundary_extractor(const Input &input, const Indices &boundary_indices, const Indices &interior_indices) :
             m_input(input),
             m_boundary_indices(boundary_indices),
@@ -62,10 +66,27 @@ namespace CGAL {
             m_distance_threshold(FT(2)),
             m_use_std_method(false),
             m_check_uniqueness(true),
-            m_use_new_method(true)
+            m_use_new_method(true),
+            m_use_connected_component_method(true),
+            m_scale(FT(1)),
+            m_min_size(10)
             { }
 
+            void set_scale(const FT new_value) {
+                m_scale = new_value;
+            }
+
+            void set_min_points(const size_t new_value) {
+                m_min_size = new_value;
+            }
+
             void extract(Projected_points &projected_points) const {
+
+                if (m_use_connected_component_method) {
+
+                    extract_boundary_points_from_connected_components(projected_points);
+                    return;
+                }
 
                 CDT cdt;
                 Queue queue;
@@ -94,6 +115,10 @@ namespace CGAL {
             const bool m_use_std_method;
             const bool m_check_uniqueness;
             const bool m_use_new_method;
+            const bool m_use_connected_component_method;
+
+            FT     m_scale;
+            size_t m_min_size;
 
             void create_cdt_and_queue(const Projected_points &projected_points, CDT &cdt, Queue &queue) const {
                 
@@ -448,6 +473,52 @@ namespace CGAL {
                     projected_points[ev1->info().index] = ev1->point();
                     projected_points[ev2->info().index] = ev2->point();
                 }
+            }
+
+            void extract_boundary_points_from_connected_components(Projected_points &projected_points) const {
+
+                Components components;
+                Region_growing region_growing = Region_growing(m_input, m_interior_indices);
+
+                region_growing.set_scale(m_scale);
+                region_growing.set_min_points(m_min_size);
+
+                region_growing.apply(components);
+                set_components(components, projected_points);
+            }
+
+            void set_components(const Components &components, Projected_points &projected_points) const {
+
+                Log log;
+                log.save_connected_components(m_input, components, "tmp" + std::string(PSR) + "lod_0_1" + std::string(PSR) + "1_components");
+
+                projected_points.clear();
+                Projected_points tmp;
+
+                for (size_t i = 0; i < components.size(); ++i) {
+                    const Indices &component = components[i];
+
+                    create_projected_points(component, tmp);
+                    apply_alpha_shapes(tmp);
+
+                    add_to_the_final_result(tmp, projected_points);
+                }
+            }
+
+            void create_projected_points(const Indices &component, Projected_points &tmp) const {
+
+                tmp.clear();
+                for (size_t i = 0; i < component.size(); ++i) {
+                    
+                    const Point_3 &p = m_input.point(component[i]);
+                    tmp[component[i]] = Point_2(p.x(), p.y());
+                }
+            }
+
+            void add_to_the_final_result(const Projected_points &tmp, Projected_points &projected_points) const {
+
+                for (auto pit = tmp.begin(); pit != tmp.end(); ++pit)
+                    projected_points[pit->first] = pit->second;
             }
 		};
 

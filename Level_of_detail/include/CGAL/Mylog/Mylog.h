@@ -1398,6 +1398,37 @@ namespace CGAL {
 				save(name, ".xyz");
 			}
 
+			template<class Input, class Indices>
+			void save_connected_components(const Input &input, const std::vector<Indices> &components, const std::string &filename) {
+
+				clear();
+
+				size_t num_points = 0;
+				for (size_t i = 0; i < components.size(); ++i) num_points += components[i].size();
+
+				out << 
+				"ply" 				   + std::string(PN) + "" <<
+				"format ascii 1.0"     + std::string(PN) + "" << 
+				"element vertex " << num_points << "" + std::string(PN) + "" << 
+				"property double x"    + std::string(PN) + "" << 
+				"property double y"    + std::string(PN) + "" << 
+				"property double z"    + std::string(PN) + "" <<
+				"property uchar red"   + std::string(PN) + "" << 
+				"property uchar green" + std::string(PN) + "" <<
+				"property uchar blue"  + std::string(PN) + "" <<
+				"end_header" 		   + std::string(PN) + "";
+
+				for (size_t i = 0; i < components.size(); ++i) {
+					
+					const Indices &indices = components[i];
+					const Color    color   = generate_random_color();
+
+					for (size_t j = 0; j < indices.size(); ++j)
+						out << input.point(indices[j]) << " " << color << std::endl;
+				}
+				save(filename, ".ply");
+			}
+
 			template<class Traits, class Container>
 			void save_ply(const Container &input, 
 						  const std::string &fileName,

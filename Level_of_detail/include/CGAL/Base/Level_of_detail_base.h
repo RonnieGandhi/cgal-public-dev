@@ -286,7 +286,9 @@ namespace CGAL {
 			m_use_extra_boundary_extraction(false),
 			m_regularization_angle_3d(FT(25)),
 			m_kinetic_number_of_intersections(1),
-			m_use_merged_facets(false)
+			m_use_merged_facets(false),
+			m_connected_component_scale(FT(1)),
+			m_connected_component_min_points(10)
 			{ }
 
 
@@ -540,6 +542,7 @@ namespace CGAL {
 
 				m_roof_cleaner_max_percentage = FT(80); // percentage of points that we keep when filtering 3D roof regions after region growing
 
+				m_connected_component_min_points = m_region_growing_min_points_3d;
 
 				// Automatically defined.
 				set_automatically_defined_options();
@@ -566,6 +569,8 @@ namespace CGAL {
 				m_region_growing_cluster_epsilon_3d = m_region_growing_cluster_epsilon_2d; // 3d region growing parameters
 
 				m_roof_cleaner_scale = m_imp_scale; // all roofs with the size <= than this value are removed
+
+				m_connected_component_scale = m_imp_scale / FT(2);
 			}
 
 			void set_required_parameters() {
@@ -648,6 +653,9 @@ namespace CGAL {
 				add_val_parameter("-roof_scale", m_roof_cleaner_scale, m_parameters);
 
 				add_val_parameter("-kin_tol", m_kinetic_3d_tolerance, m_parameters);
+
+				add_val_parameter("-cc_scale" , m_connected_component_scale		, m_parameters);
+				add_val_parameter("-cc_min_3d", m_connected_component_min_points, m_parameters);
 			}
 
 			void set_user_defined_parameters(const Parameters_wrapper &parameters_wrapper) {
@@ -848,6 +856,10 @@ namespace CGAL {
 				std::cout << "(" << exec_step << ") extracting better boundaries; " << std::endl;
 
 				Triangulation_based_boundary_extractor extractor = Triangulation_based_boundary_extractor(input, building_boundary_idxs, building_interior_idxs);
+				
+				extractor.set_scale(m_connected_component_scale);
+				extractor.set_min_points(m_connected_component_min_points);
+				
 				extractor.extract(boundary_clutter_projected);
 
 				Log points_exporter;
@@ -2225,6 +2237,9 @@ namespace CGAL {
 			int m_kinetic_number_of_intersections;
 
 			bool m_use_merged_facets;
+
+			FT     m_connected_component_scale;
+			size_t m_connected_component_min_points;
 
 
 			// Assert default values of all global parameters.
