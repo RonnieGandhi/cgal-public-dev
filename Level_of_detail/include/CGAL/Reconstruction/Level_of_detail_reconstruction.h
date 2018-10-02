@@ -696,6 +696,8 @@ namespace CGAL {
 				const Color color = Color(245, 121, 0);
 				const auto &faces = building.faces;
 
+				if (faces.size() < 2) return;
+
 				add_horizontal_triangulation(faces, color, FT(1) / FT(100), builder); // floor
 			}
 
@@ -728,8 +730,10 @@ namespace CGAL {
 				const Color color1 = Color(245, 121, 0);
 
 				const auto &faces = building.faces;
+				if (faces.size() < 2) return;
+
 				add_horizontal_triangulation(faces, color1, height, builder); // roof
-	
+
 				const auto &boundary = building.boundaries[0];
 				const Color color2   = Color(255, 255, 255);
 				add_walls_from_unoriented_boundary(boundary, color2, FT(0), height, builder); // walls

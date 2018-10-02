@@ -2276,18 +2276,19 @@ namespace CGAL {
 		        save(name, ".eps");
 			}
 
-			template<class Boundary_data, class Projected_points>
-			void save_2d_region_growing(const std::string &name, const Boundary_data &boundaries, const Projected_points &boundaries_projected, const Projected_points &clutter) {
+			template<class Boundary_data, class Projected_points, class FT>
+			void save_2d_region_growing(const std::string &name, 
+			const Boundary_data &boundaries, const Projected_points &boundaries_projected, const Projected_points &clutter, const FT ground_height = FT(0)) {
 
 				const std::string bounds_name  = name + "_boundaries";
 				const std::string clutter_name = name + "_clutter";
 
-				export_boundaries_as_ply(bounds_name, boundaries, boundaries_projected);
-				export_projected_points_as_xyz(clutter_name, clutter, "stub");
+				export_boundaries_as_ply(bounds_name, boundaries, boundaries_projected, ground_height);
+				export_projected_points_as_xyz(clutter_name, clutter, "stub", ground_height);
 			}
 
-			template<class Boundary_data, class Projected_points>
-			void export_boundaries_as_ply(const std::string &name, const Boundary_data &boundaries, const Projected_points &boundaries_projected) {
+			template<class Boundary_data, class Projected_points, class FT>
+			void export_boundaries_as_ply(const std::string &name, const Boundary_data &boundaries, const Projected_points &boundaries_projected, const FT ground_height = FT(0)) {
 
 				clear();
 				const size_t total_size = boundaries_projected.size();
@@ -2313,7 +2314,7 @@ namespace CGAL {
 					const CGAL::Color color = generate_random_color();
 
 					for (size_t i = 0; i < indices.size(); ++i) 
-						out << boundaries_projected.at(indices[i]) << " " << 0 << " " << color << std::endl;
+						out << boundaries_projected.at(indices[i]) << " " << ground_height << " " << color << std::endl;
 
 					sum_size += indices.size();
 				}
@@ -2337,12 +2338,12 @@ namespace CGAL {
 				return value;
 			}
 
-			template<class Projected_points>
-			void export_projected_points_as_xyz(const std::string &name, const Projected_points &projected, const std::string & /* default_path */) {
+			template<class Projected_points, class FT>
+			void export_projected_points_as_xyz(const std::string &name, const Projected_points &projected, const std::string & /* default_path */, const FT ground_height = FT(0)) {
 				
 				clear();
 				for (typename Projected_points::const_iterator it = projected.begin(); it != projected.end(); ++it)
-					out << (*it).second << " " << 0 << std::endl;
+					out << (*it).second << " " << ground_height << std::endl;
 
 				// save(name, ".xyz", default_path);
 				save(name, ".xyz");

@@ -99,7 +99,7 @@ namespace CGAL {
 				assert(number_of_new_points >= 0);
 
                 if (!m_silent) {
-                    Log exporter; exporter.export_projected_points_as_xyz("tmp" + std::string(PSR) + "filtered_clutter", boundary_clutter_projected, "unused path");
+                    Log exporter; exporter.export_projected_points_as_xyz("tmp" + std::string(PSR) + "filtered_clutter", boundary_clutter_projected, "unused path", FT(0));
                 }
 
                 return number_of_new_points;

@@ -846,11 +846,11 @@ namespace CGAL {
 
 				Log points_exporter;
 				if (!m_silent && !boundary_clutter_projected.empty())
-					points_exporter.export_projected_points_as_xyz("tmp" + std::string(PSR) + "lod_0_1" + std::string(PSR) + "0_projected_clutter", boundary_clutter_projected, m_default_path);
+					points_exporter.export_projected_points_as_xyz("tmp" + std::string(PSR) + "lod_0_1" + std::string(PSR) + "0_projected_clutter", boundary_clutter_projected, m_default_path, FT(0));
 			}
 
 			void applying_boundary_extraction(Projected_points &boundary_clutter_projected, 
-			const Indices &building_boundary_idxs, const Indices &building_interior_idxs, const Container_3D &input, const size_t exec_step) {
+			const Indices &building_boundary_idxs, const Indices &building_interior_idxs, const Container_3D &input, const FT ground_height, const size_t exec_step) {
 
 				// Extra: apply a better boundary extraction.
 				std::cout << "(" << exec_step << ") extracting better boundaries; " << std::endl;
@@ -864,7 +864,8 @@ namespace CGAL {
 
 				Log points_exporter;
 				if (!m_silent)
-					points_exporter.export_projected_points_as_xyz("tmp" + std::string(PSR) + "lod_0_1" + std::string(PSR) + "1_better_boundaries", boundary_clutter_projected, m_default_path);
+					points_exporter.export_projected_points_as_xyz("tmp" + std::string(PSR) + "lod_0_1" + std::string(PSR) + "1_better_boundaries", 
+					boundary_clutter_projected, m_default_path, ground_height);
 			}
 
 			void applying_grid_simplification(Projected_points &boundary_clutter_projected, const size_t exec_step) {
@@ -886,7 +887,7 @@ namespace CGAL {
 			void detecting_2d_lines(
 				Boundary_data &boundary_clutter   , Projected_points &boundary_clutter_projected,
 				Boundary_data &building_boundaries, Projected_points &building_boundaries_projected,
-				const Container_3D &input, const size_t exec_step) {
+				const Container_3D &input, const FT ground_height, const size_t exec_step) {
 
 				// Detect lines in 2D using region growing.
 				std::cout << "(" << exec_step << ") detecting 2d lines; ";
@@ -898,6 +899,8 @@ namespace CGAL {
 
 				m_region_growing_2.make_silent(m_silent);
 				m_region_growing_2.set_normal_estimation_method(m_region_growing_normal_estimation_method);
+
+				m_region_growing_2.set_ground_height(ground_height);
 
 				const auto number_of_detected_lines = m_region_growing_2.detect(boundary_clutter, boundary_clutter_projected, building_boundaries, building_boundaries_projected, input);
 				std::cout << "detected lines: " << number_of_detected_lines << ";" << std::endl;
@@ -1691,10 +1694,11 @@ namespace CGAL {
 				projecting(boundary_clutter_projected, base_ground_plane, boundary_clutter, input, ++exec_step);
 
 
+				ground_height = get_average_target_height(fitted_ground_box);
 				if (m_use_extra_boundary_extraction) {
 
 					// (04) ----------------------------------
-					applying_boundary_extraction(boundary_clutter_projected, building_boundary_idxs, building_interior_idxs, input, ++exec_step);
+					applying_boundary_extraction(boundary_clutter_projected, building_boundary_idxs, building_interior_idxs, input, ground_height, ++exec_step);
 				}
 
 
@@ -1704,7 +1708,7 @@ namespace CGAL {
 
 				// (06) ----------------------------------
 				Boundary_data building_boundaries; Projected_points building_boundaries_projected;
-				detecting_2d_lines(boundary_clutter, boundary_clutter_projected, building_boundaries, building_boundaries_projected, input, ++exec_step);
+				detecting_2d_lines(boundary_clutter, boundary_clutter_projected, building_boundaries, building_boundaries_projected, input, ground_height, ++exec_step);
 
 
 				// (07) ----------------------------------
@@ -1798,7 +1802,6 @@ namespace CGAL {
 
 
 				// (23) ----------------------------------
-				ground_height = get_average_target_height(fitted_ground_box);
 				translating_lod0_and_lod1(ground_height, mesh_0, mesh_facet_colors_0, mesh_1, mesh_facet_colors_1, ++exec_step);
 			}
 

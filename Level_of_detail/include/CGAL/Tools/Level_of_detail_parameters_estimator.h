@@ -122,7 +122,7 @@ namespace CGAL {
 
 				if (m_save_info) {
 					Log exporter;
-					exporter.export_projected_points_as_xyz("tmp" + std::string(PSR) + "points_for_estimation", m_points, "stub");
+					exporter.export_projected_points_as_xyz("tmp" + std::string(PSR) + "points_for_estimation", m_points, "stub", FT(0));
 				}
 			}
 

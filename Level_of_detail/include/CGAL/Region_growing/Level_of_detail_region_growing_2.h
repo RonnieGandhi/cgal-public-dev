@@ -88,7 +88,8 @@ namespace CGAL {
 			m_min_points(0),
 			m_save_info(false),
 			m_silent(false),
-			m_normal_estimation_method(Region_growing_normal_estimation::PROJECTED) { }
+			m_normal_estimation_method(Region_growing_normal_estimation::PROJECTED),
+			m_ground_height(FT(0)) { }
 
 
 			// Public functions.
@@ -126,6 +127,10 @@ namespace CGAL {
 
 			void set_normal_estimation_method(const Region_growing_normal_estimation new_method) {
 				m_normal_estimation_method = new_method;
+			}
+
+			void set_ground_height(const FT new_value) {
+				m_ground_height = new_value;
 			}
 
 
@@ -181,7 +186,8 @@ namespace CGAL {
 
 				if (!m_silent) {
 					log.clear();
-					log.save_2d_region_growing("tmp" + std::string(PSR) + "lod_0_1" + std::string(PSR) + "region_growing", building_boundaries, building_boundaries_projected, boundary_clutter_projected);
+					log.save_2d_region_growing("tmp" + std::string(PSR) + "lod_0_1" + std::string(PSR) + "region_growing", 
+					building_boundaries, building_boundaries_projected, boundary_clutter_projected, m_ground_height);
 				}
 
 
@@ -210,6 +216,8 @@ namespace CGAL {
 
       		bool m_silent;
       		Region_growing_normal_estimation m_normal_estimation_method;
+
+			FT m_ground_height;
 
 
 			class Sort_by_linearity {

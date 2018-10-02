@@ -270,7 +270,7 @@ namespace CGAL {
 				assert(number_of_processed_points >= 0);
 
 				if (!m_silent) {
-					Log log; log.export_projected_points_as_xyz("tmp" + std::string(PSR) + "thinned_clutter", boundary_clutter_projected, "unused path");
+					Log log; log.export_projected_points_as_xyz("tmp" + std::string(PSR) + "thinned_clutter", boundary_clutter_projected, "unused path", FT(0));
 				}
 
 				error = compute_scale_error();
@@ -477,7 +477,7 @@ namespace CGAL {
 
 				// Save log.
 				Log log; 
-				log.export_projected_points_as_xyz("tmp" + std::string(PSR) + "thinning_complex_result", boundary_clutter_projected, "unused path");
+				log.export_projected_points_as_xyz("tmp" + std::string(PSR) + "thinning_complex_result", boundary_clutter_projected, "unused path", FT(0));
 
 				error = compute_scale_error();
 				return boundary_clutter_projected.size();
