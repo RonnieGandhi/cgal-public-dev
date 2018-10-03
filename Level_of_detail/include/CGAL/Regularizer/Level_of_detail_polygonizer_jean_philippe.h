@@ -72,14 +72,15 @@ namespace CGAL {
             m_min_face_width(FT(1)), 
             m_bbox_scale(FT(2)),
             m_num_neighbours(6), 
-            m_local_scaling(FT(4))
+            m_local_scaling(FT(4)),
+            m_ground_height(FT(0))
             { }
 
             void polygonize(Segments &segments, Data_structure &data_structure) const {
 
                 if (m_debug) {
                     const std::string stub = "";
-                    Log segments_exporter; segments_exporter.export_segments_as_obj("tmp" + std::string(PSR) + "polygonizer_input_segments_jean_philippe", segments, stub);
+                    Log segments_exporter; segments_exporter.export_segments_as_obj("tmp" + std::string(PSR) + "polygonizer_input_segments_jean_philippe", segments, stub, m_ground_height);
                 }
 
                 Kinetic_Model* model = new Kinetic_Model();
@@ -124,6 +125,10 @@ namespace CGAL {
                 delete model;
             }
 
+            void set_ground_height(const FT new_value) {
+                m_ground_height = new_value;
+            }
+
             void make_silent(const bool new_state) {
                 m_silent = new_state;
             }
@@ -150,6 +155,8 @@ namespace CGAL {
             const FT     m_bbox_scale;
             const size_t m_num_neighbours;
             const FT     m_local_scaling;
+
+            FT m_ground_height;
 
             void initialize_kinetic_model(Kinetic_Model *model) const {
                 model->reinit();
@@ -222,7 +229,7 @@ namespace CGAL {
 
                 if (m_debug && save) {
                     const std::string stub = "";
-                    Log segments_exporter; segments_exporter.export_segments_as_obj("tmp" + std::string(PSR) + "polygonizer_translated_input_segments_jean_philippe", segments, stub);
+                    Log segments_exporter; segments_exporter.export_segments_as_obj("tmp" + std::string(PSR) + "polygonizer_translated_input_segments_jean_philippe", segments, stub, m_ground_height);
                 }
             }
 
@@ -324,7 +331,7 @@ namespace CGAL {
             void save_partition(const Segments &segments) const {
 
                 const std::string stub = "";
-                Log segments_exporter; segments_exporter.export_segments_as_obj("tmp" + std::string(PSR) + "lod_0_1" + std::string(PSR) + "polygonizer_partition_jean_philippe", segments, stub);
+                Log segments_exporter; segments_exporter.export_segments_as_obj("tmp" + std::string(PSR) + "lod_0_1" + std::string(PSR) + "7_partition", segments, stub, m_ground_height);
             }
 
             void built_data_structure(const Point_2 &bl, const Scale &scale, Kinetic_Model *model, Data_structure &data_structure) const {

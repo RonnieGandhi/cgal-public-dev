@@ -154,6 +154,8 @@ namespace CGAL {
 
 			typedef typename Traits::Triangulation_based_boundary_extractor Triangulation_based_boundary_extractor;
 
+			typedef typename Traits::LOD0_LOD1_reconstructor LOD0_LOD1_reconstructor;
+
 			// Extra typedefs.
 			using Plane_iterator = typename Planes::const_iterator;
 
@@ -772,9 +774,9 @@ namespace CGAL {
 
 				if (!m_silent) {
 					Log log; 
-					log.export_points_using_indices(input, ground_idxs, "tmp" + std::string(PSR) + "lod_0_1" + std::string(PSR) + "ground");
-					log.export_points_using_indices(input, building_boundary_idxs, "tmp" + std::string(PSR) + "lod_0_1" + std::string(PSR) + "building_boundary");
-					log.export_points_using_indices(input, building_interior_idxs, "tmp" + std::string(PSR) + "lod_0_1" + std::string(PSR) + "building_interior");
+					log.export_points_using_indices(input, ground_idxs, "tmp" + std::string(PSR) + "lod_0_1" + std::string(PSR) + "0_ground_points");
+					log.export_points_using_indices(input, building_boundary_idxs, "tmp" + std::string(PSR) + "lod_0_1" + std::string(PSR) + "0_boundary_points");
+					log.export_points_using_indices(input, building_interior_idxs, "tmp" + std::string(PSR) + "lod_0_1" + std::string(PSR) + "0_interior_points");
 				}
 
 				std::cout << "ground: " << ground_idxs.size() << "; boundary: " << building_boundary_idxs.size() << "; interior: " << building_interior_idxs.size() << "; " << std::endl;
@@ -798,21 +800,22 @@ namespace CGAL {
 				m_utils.return_bounding_box(base_ground_plane, input, ground_idxs, fitted_ground_box);
 				boxes[0] = fitted_ground_box;
 
+				/*
 				if (!m_silent) {
-					Log log; log.save_bounding_boxes_as_ply<Bounding_boxes, Point_3>(boxes, "tmp" + std::string(PSR) + "lod_0_1" + std::string(PSR) + "base_ground_plane");
-				}
+					Log log; log.save_bounding_boxes_as_ply<Bounding_boxes, Point_3>(boxes, "tmp" + std::string(PSR) + "lod_0_1" + std::string(PSR) + "1_base_ground_plane");
+				} */
 
 				m_utils.return_bounding_box(fitted_ground_plane, input, ground_idxs, fitted_ground_box);
 				boxes[0] = fitted_ground_box;
 
 				if (!m_silent) {
-					Log log; log.save_bounding_boxes_as_ply<Bounding_boxes, Point_3>(boxes, "tmp" + std::string(PSR) + "lod_0_1" + std::string(PSR) + "fitted_ground_plane");
+					Log log; log.save_bounding_boxes_as_ply<Bounding_boxes, Point_3>(boxes, "tmp" + std::string(PSR) + "lod_0_1" + std::string(PSR) + "1_ground_plane");
 				}
 			}
 
 			void getting_boundary_points(
 				Boundary_data &boundary_clutter,
-				const Indices &building_boundary_idxs, const Indices &building_interior_idxs, const Container_3D &input, const size_t exec_step) {
+				const Indices &building_boundary_idxs, const Indices &building_interior_idxs, const Container_3D &input, const FT ground_height, const size_t exec_step) {
 
 				// Map indices from all detected planes to the ones that are a part of the given facades.
 				std::cout << "(" << exec_step << ") getting boundaries; ";
@@ -827,16 +830,17 @@ namespace CGAL {
 				const auto number_of_boundary_points = m_preprocessor.get_boundary_points(input, building_boundary_idxs, building_interior_idxs, stub_state, stub, boundary_clutter);
 				std::cout << std::endl;
 
+				/*
 				if (!m_silent) {
 
 					Log log;
-					log.export_clutter_as_xyz("tmp" + std::string(PSR) + "lod_0_1" + std::string(PSR) + "full_boundary_points", boundary_clutter, input);
-				}
+					log.export_clutter_as_xyz("tmp" + std::string(PSR) + "lod_0_1" + std::string(PSR) + "2_full_boundary_points", boundary_clutter, input, ground_height);
+				} */
 			}
 
 			void projecting(
 				Projected_points &boundary_clutter_projected,
-				const Plane_3 &base_ground_plane, const Boundary_data &boundary_clutter, const Container_3D &input, const size_t exec_step) {
+				const Plane_3 &base_ground_plane, const Boundary_data &boundary_clutter, const Container_3D &input, const FT ground_height, const size_t exec_step) {
 
 				// Project all points in 2D.
 				std::cout << "(" << exec_step << ") projecting; ";
@@ -846,7 +850,7 @@ namespace CGAL {
 
 				Log points_exporter;
 				if (!m_silent && !boundary_clutter_projected.empty())
-					points_exporter.export_projected_points_as_xyz("tmp" + std::string(PSR) + "lod_0_1" + std::string(PSR) + "0_projected_clutter", boundary_clutter_projected, m_default_path, FT(0));
+					points_exporter.export_projected_points_as_xyz("tmp" + std::string(PSR) + "lod_0_1" + std::string(PSR) + "2_boundaries", boundary_clutter_projected, m_default_path, ground_height);
 			}
 
 			void applying_boundary_extraction(Projected_points &boundary_clutter_projected, 
@@ -864,11 +868,11 @@ namespace CGAL {
 
 				Log points_exporter;
 				if (!m_silent)
-					points_exporter.export_projected_points_as_xyz("tmp" + std::string(PSR) + "lod_0_1" + std::string(PSR) + "1_better_boundaries", 
+					points_exporter.export_projected_points_as_xyz("tmp" + std::string(PSR) + "lod_0_1" + std::string(PSR) + "2_improved_boundaries",
 					boundary_clutter_projected, m_default_path, ground_height);
 			}
 
-			void applying_grid_simplification(Projected_points &boundary_clutter_projected, const size_t exec_step) {
+			void applying_grid_simplification(Projected_points &boundary_clutter_projected, const FT ground_height, const size_t exec_step) {
 
 				// Remove all unnecessary points.
 				assert(m_clutter_new_point_type == Grid_new_point_type::CLOSEST);
@@ -877,6 +881,8 @@ namespace CGAL {
 				m_grid_simplifier.set_grid_cell_length(m_clutter_cell_length);
 				m_grid_simplifier.set_new_point_type(m_clutter_new_point_type);
 				m_grid_simplifier.make_silent(m_silent);
+
+				m_grid_simplifier.set_ground_height(ground_height);
 
 				Boundary_data stub;
 				const auto number_of_removed_points = m_grid_simplifier.process(stub, boundary_clutter_projected);
@@ -920,7 +926,8 @@ namespace CGAL {
 
 			void creating_segments(
 				Segments &segments,
-				const Lines &lines, const Boundary_data &building_boundaries, const Projected_points &building_boundaries_projected, const std::string &name, const size_t exec_step) {
+				const Lines &lines, const Boundary_data &building_boundaries, const Projected_points &building_boundaries_projected, const std::string &name, 
+				const FT ground_height, const size_t exec_step) {
 
 				// Find segments from the given lines.
 				std::cout << "(" << exec_step << ") creating segments; ";
@@ -928,11 +935,11 @@ namespace CGAL {
 				std::cout << "number of segments: " << number_of_segments << ";" << std::endl;
 				
 				if (!m_silent) {
-					Log segments_exporter; segments_exporter.export_segments_as_obj("tmp" + std::string(PSR) + "lod_0_1" + std::string(PSR) + name, segments, m_default_path);
+					Log segments_exporter; segments_exporter.export_segments_as_obj("tmp" + std::string(PSR) + "lod_0_1" + std::string(PSR) + name, segments, m_default_path, ground_height);
 				}
 			}
 
-			void regularizing_lines(Segments &segments, Lines &lines, const size_t exec_step) {
+			void regularizing_lines(Segments &segments, Lines &lines, const FT ground_height, const size_t exec_step) {
 
 				// Regularize lines.
 				std::cout << "(" << exec_step << ") regularizing lines; " << std::endl;
@@ -951,11 +958,11 @@ namespace CGAL {
 				m_line_regularizer.get_lines_from_segments(segments, lines);
 
 				if (!m_silent) {
-				    Log segments_exporter; segments_exporter.export_segments_as_obj("tmp" + std::string(PSR) + "lod_0_1" + std::string(PSR) + "regularized_segments", segments, m_default_path);
+				    Log segments_exporter; segments_exporter.export_segments_as_obj("tmp" + std::string(PSR) + "lod_0_1" + std::string(PSR) + "6_regularized_segments", segments, m_default_path, ground_height);
 				}
 			}
 
-			void polygonizing(Segments &segments, Data_structure &data_structure, const size_t exec_step) {
+			void polygonizing(Segments &segments, Data_structure &data_structure, const FT ground_height, const size_t exec_step) {
 
 				// Prolongate segments and get a set of polygons.
 				std::cout << "(" << exec_step << ") polygonizing; " << std::endl;
@@ -966,6 +973,7 @@ namespace CGAL {
 				polygonizer.set_number_of_intersections(m_polygonizer_number_of_intersections);
 				polygonizer.set_min_face_width(m_polygonizer_min_face_width);
 
+				polygonizer.set_ground_height(ground_height);
 				polygonizer.polygonize(segments, data_structure);
 			}
 
@@ -977,22 +985,24 @@ namespace CGAL {
 				m_utils.update_constraints(data_structure, segments, m_silent);
 			}
 
-			void computing_polygon_based_visibility(Data_structure &data_structure, const Container_3D &input, const size_t exec_step) {
+			void computing_polygon_based_visibility(Data_structure &data_structure, const Container_3D &input, const FT ground_height, const size_t exec_step) {
 
 				// Compute visibility for each polygon in the given data structure.
 				std::cout << "(" << exec_step << ") computing visibility; " << std::endl;				
 				Polygon_based_visibility polygon_based_visibility(input, data_structure);
 
 				polygon_based_visibility.make_silent(m_silent);
+				polygon_based_visibility.set_ground_height(ground_height);
+
 				polygon_based_visibility.compute();
 			}
 
-			void creating_polygon_based_cdt(CDT &cdt, const Data_structure &data_structure, const Projected_points &boundary_clutter_projected, const size_t exec_step) {
+			void creating_polygon_based_cdt(CDT &cdt, const Data_structure &data_structure, const Projected_points &boundary_clutter_projected, const FT ground_height, const size_t exec_step) {
 
 				// Compute constrained Delaunay triangulation from the given data structure.
 				std::cout << "(" << exec_step << ") creating cdt;" << std::endl;
-				
-				m_utils.compute_cdt(cdt, data_structure, boundary_clutter_projected, m_add_cdt_clutter, m_silent);
+
+				m_utils.compute_cdt(cdt, data_structure, boundary_clutter_projected, m_add_cdt_clutter, m_silent, ground_height);
 			}
 
 			void applying_2d_structuring(const Lines &lines, const Boundary_data &building_boundaries, const Projected_points &building_boundaries_projected, const size_t exec_step) {
@@ -1109,7 +1119,7 @@ namespace CGAL {
 				
 				if (!m_silent) {
 					Log eps_saver; eps_saver.save_visibility_eps(cdt);
-					Log ply_vis_saver; ply_vis_saver.save_cdt_ply(cdt, "tmp" + std::string(PSR) + "visibility", "in");
+					Log ply_vis_saver; ply_vis_saver.save_cdt_ply(cdt, "tmp" + std::string(PSR) + "visibility", "in", FT(0));
 				}
 			}
 
@@ -1129,11 +1139,11 @@ namespace CGAL {
 				graphcut_2.max_flow(cdt);
 
 				if (!m_silent) {
-					Log ply_cdt_in; ply_cdt_in.save_cdt_ply(cdt, "tmp" + std::string(PSR) + "after_cut", "in");
+					Log ply_cdt_in; ply_cdt_in.save_cdt_ply(cdt, "tmp" + std::string(PSR) + "after_cut", "in", FT(0));
 				}
 			}
 
-			void splitting_buildings(Buildings &buildings, CDT &cdt, const Segments &segments, const size_t exec_step) {
+			void splitting_buildings(Buildings &buildings, CDT &cdt, const Segments &segments, const FT ground_height, const size_t exec_step) {
 
 				// Split all buildings.
 				std::cout << "(" << exec_step << ") splitting buildings; ";
@@ -1141,6 +1151,7 @@ namespace CGAL {
 				m_building_splitter.make_silent(m_silent);
 				m_building_splitter.use_custom_constraints(m_building_splitter_use_custom_constraints);
 				m_building_splitter.set_constraints_threshold(m_building_splitter_constraints_threshold);
+				m_building_splitter.set_ground_height(ground_height);
 				
 				const auto number_of_buildings = m_building_splitter.split(cdt, buildings, segments);
 				std::cout << "number of buildings: " << number_of_buildings << ";" << std::endl;
@@ -1235,6 +1246,17 @@ namespace CGAL {
 				Log lod_saver;
 				lod_saver.save_mesh_as_ply(mesh_0, mesh_facet_colors_0, "LOD0");
 				lod_saver.save_mesh_as_ply(mesh_1, mesh_facet_colors_1, "LOD1");
+			}
+
+			void reconstructing_lod0_and_lod1(Ground &ground_bbox, const FT ground_height, const CDT &cdt, Buildings &buildings, const Container_3D &input, const size_t exec_step) {
+				
+				std::cout << "(" << exec_step << ") reconstructing lod0 and lod1;" << std::endl;
+
+				m_lods.use_boundaries(m_use_boundaries);
+				m_utils. template compute_ground_bbox<Ground, Ground_point>(input, ground_bbox);
+
+				LOD0_LOD1_reconstructor reconstructor(ground_bbox, ground_height, cdt, buildings);
+				reconstructor.create();
 			}
 
 			void creating_2d_partition_input(const Container_3D &input, Buildings &buildings, const size_t exec_step) {
@@ -1588,12 +1610,12 @@ namespace CGAL {
 				}
 			}
 
-			void merging_coplanar_facets(Buildings &buildings, const size_t exec_step) {
+			void merging_coplanar_facets(Buildings &buildings, const FT ground_height, const size_t exec_step) {
 				
 				// Merge coplanar facets.
 				std::cout << "(" << exec_step << ") merging coplanar facets;" << std::endl;
 
-				Coplanar_facets_merger coplanar_facets_merger = Coplanar_facets_merger(buildings);
+				Coplanar_facets_merger coplanar_facets_merger = Coplanar_facets_merger(buildings, ground_height);
 				
 				coplanar_facets_merger.use_merged_facets(m_use_merged_facets);
 				coplanar_facets_merger.merge();
@@ -1607,7 +1629,7 @@ namespace CGAL {
 
 				// LOD2 reconstruction.
 				std::cout << "(" << exec_step << ") reconstructing lod2;" << std::endl;
-				
+
 				Kinetic_LOD2_reconstruction lod2 = Kinetic_LOD2_reconstruction(cdt, buildings, ground_bbox, ground_height, mesh_facet_colors);
 				lod2.reconstruct(mesh);
 
@@ -1682,19 +1704,20 @@ namespace CGAL {
 				// (02) ----------------------------------
 				Plane_3 base_ground_plane, fitted_ground_plane;
 				ground_fitting(base_ground_plane, fitted_ground_plane, fitted_ground_box, ground_idxs, input, ++exec_step);
-
+				ground_height = get_average_target_height(fitted_ground_box);
 
 				// (03) ----------------------------------
+				
+
 				Boundary_data boundary_clutter;
-				getting_boundary_points(boundary_clutter, building_boundary_idxs, building_interior_idxs, input, ++exec_step);
+				getting_boundary_points(boundary_clutter, building_boundary_idxs, building_interior_idxs, input, ground_height, ++exec_step);
 
 
 				// (04) ----------------------------------
 				Projected_points boundary_clutter_projected;
-				projecting(boundary_clutter_projected, base_ground_plane, boundary_clutter, input, ++exec_step);
+				projecting(boundary_clutter_projected, base_ground_plane, boundary_clutter, input, ground_height, ++exec_step);
 
-
-				ground_height = get_average_target_height(fitted_ground_box);
+				
 				if (m_use_extra_boundary_extraction) {
 
 					// (04) ----------------------------------
@@ -1703,7 +1726,7 @@ namespace CGAL {
 
 
 				// (05) ----------------------------------
-				applying_grid_simplification(boundary_clutter_projected, ++exec_step);
+				applying_grid_simplification(boundary_clutter_projected, ground_height, ++exec_step);
 
 
 				// (06) ----------------------------------
@@ -1718,11 +1741,11 @@ namespace CGAL {
 
 				// (08) ----------------------------------
 				Segments segments;
-				creating_segments(segments, lines, building_boundaries, building_boundaries_projected, "original_segments", ++exec_step);
+				creating_segments(segments, lines, building_boundaries, building_boundaries_projected, "5_segments", ground_height, ++exec_step);
 
 
 				// (09) ----------------------------------
-				if (m_regularize_lines) regularizing_lines(segments, lines, ++exec_step);
+				if (m_regularize_lines) regularizing_lines(segments, lines, ground_height, ++exec_step);
 
 
 				// (10) ----------------------------------
@@ -1731,15 +1754,15 @@ namespace CGAL {
 				if (m_polygonize) {
 					Data_structure data_structure;
 
-					polygonizing(segments, data_structure, ++exec_step);
-					computing_polygon_based_visibility(data_structure, input, ++exec_step);
+					polygonizing(segments, data_structure, ground_height, ++exec_step);
+					computing_polygon_based_visibility(data_structure, input, ground_height, ++exec_step);
 
 					if (m_add_cdt_clutter) {
 						applying_clutter_thinning(boundary_clutter, boundary_clutter_projected, input, ++exec_step);
 						filtering_clutter(boundary_clutter, boundary_clutter_projected, ++exec_step);
 					}
 
-					creating_polygon_based_cdt(cdt, data_structure, boundary_clutter_projected, ++exec_step);
+					creating_polygon_based_cdt(cdt, data_structure, boundary_clutter_projected, ground_height, ++exec_step);
 				}
 
 
@@ -1782,7 +1805,7 @@ namespace CGAL {
 				// From now on we handle each building separately.
 
 				// (18) ----------------------------------				
-				splitting_buildings(buildings, cdt, original_segments, ++exec_step);
+				splitting_buildings(buildings, cdt, original_segments, ground_height, ++exec_step);
 
 
 				// (19) ----------------------------------				
@@ -1793,16 +1816,24 @@ namespace CGAL {
 				fitting_roofs(buildings, fitted_ground_plane, fp_map, input, cdt, ++exec_step);
 
 
-				// (21) ----------------------------------
-				reconstructing_lod0(ground_bbox, cdt, buildings, mesh_0, mesh_facet_colors_0, input, ++exec_step);
+				if (!m_use_merged_facets) {
+					
+					// (21) ----------------------------------
+					reconstructing_lod0(ground_bbox, cdt, buildings, mesh_0, mesh_facet_colors_0, input, ++exec_step);
 
 
-				// (22) ----------------------------------	
-				reconstructing_lod1(cdt, buildings, mesh_1, mesh_facet_colors_1, ground_bbox, ++exec_step);
+					// (22) ----------------------------------	
+					reconstructing_lod1(cdt, buildings, mesh_1, mesh_facet_colors_1, ground_bbox, ++exec_step);
 
 
-				// (23) ----------------------------------
-				translating_lod0_and_lod1(ground_height, mesh_0, mesh_facet_colors_0, mesh_1, mesh_facet_colors_1, ++exec_step);
+					// (23) ----------------------------------
+					translating_lod0_and_lod1(ground_height, mesh_0, mesh_facet_colors_0, mesh_1, mesh_facet_colors_1, ++exec_step);
+
+				} else {
+
+					// (21) ----------------------------------
+					reconstructing_lod0_and_lod1(ground_bbox, ground_height, cdt, buildings, input, ++exec_step);
+				}
 			}
 
 
@@ -1870,7 +1901,7 @@ namespace CGAL {
 
 
 				// (14) ----------------------------------
-				merging_coplanar_facets(buildings, ++exec_step);
+				merging_coplanar_facets(buildings, ground_height, ++exec_step);
 
 
 				// (15) ----------------------------------

@@ -82,7 +82,8 @@ namespace CGAL {
 			m_grid_cell_length(FT(1) / FT(100)),
 			m_new_point_type(Grid_new_point_type::BARYCENTRE),
 			m_save_result(true),
-			m_silent(false) { }
+			m_silent(false),
+			m_ground_height(FT(0)) { }
 
 
 			// Input functions.	
@@ -104,6 +105,10 @@ namespace CGAL {
 				m_save_result = new_state;
 			}
 
+			void set_ground_height(const FT new_value) {
+				m_ground_height = new_value;
+			}
+			
 
 			// Main.
 			int process(Boundary_data &, Projected_points &boundary_clutter_projected) const {
@@ -128,7 +133,7 @@ namespace CGAL {
 				if (m_save_result && !m_silent) {
 					
 					Log log; 
-					log.export_projected_points_as_xyz("tmp" + std::string(PSR) + "lod_0_1" + std::string(PSR) + "grid_simplify_result", boundary_clutter_projected, "unused path", FT(0));
+					log.export_projected_points_as_xyz("tmp" + std::string(PSR) + "lod_0_1" + std::string(PSR) + "3_simplified_boundaries", boundary_clutter_projected, "unused path", m_ground_height);
 				}
 				
 				return number_of_removed_points;
@@ -141,6 +146,8 @@ namespace CGAL {
 			Grid_new_point_type m_new_point_type;
 			bool 			    m_save_result;
 			bool 				m_silent;
+
+			FT m_ground_height;
 
 
 		// Grid simplify.

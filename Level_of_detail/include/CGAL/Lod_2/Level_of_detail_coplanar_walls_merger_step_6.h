@@ -89,7 +89,7 @@ namespace CGAL {
                 const size_t n = output_facet.size();
                 for (size_t i = 0; i < n; ++i) {
                     
-                    const size_t im = (i + n -1) % n;
+                    const size_t im = (i + n - 1) % n;
                     const size_t ip = (i + 1) % n;
 
                     const Point_3 &p1 = output_facet[im];

@@ -1036,7 +1036,7 @@ namespace CGAL {
 
 				if (!m_silent) {
 					Log logex;
-					logex.export_segments_as_obj("tmp" + std::string(PSR) + "adjacency_graph", edges, "stub");
+					logex.export_segments_as_obj("tmp" + std::string(PSR) + "adjacency_graph", edges, "stub", FT(0));
 				}
 
 				// Log function. Can be removed.

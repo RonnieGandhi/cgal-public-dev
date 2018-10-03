@@ -129,7 +129,7 @@ namespace CGAL {
                 add_interior_points(cdt);
 
                 Log log;
-                log.save_cdt_ply(cdt, "tmp" + std::string(PSR) + "lod_0_1" + std::string(PSR) + "1_cdt");
+                log.save_cdt_ply(cdt, "tmp" + std::string(PSR) + "lod_0_1" + std::string(PSR) + "1_cdt", "tag", FT(0));
             }
 
             void add_projected_points(const Projected_points &projected_points, CDT &cdt, Queue &queue) const {
@@ -310,7 +310,7 @@ namespace CGAL {
                 }
 
                 Log log;
-                log.save_cdt_ply(cdt, "tmp" + std::string(PSR) + "lod_0_1" + std::string(PSR) + "1_cdt_tagged", "tag");
+                log.save_cdt_ply(cdt, "tmp" + std::string(PSR) + "lod_0_1" + std::string(PSR) + "1_cdt_tagged", "tag", FT(0));
             }
 
             bool is_boundary_face(const Face_handle &fh) const {
@@ -340,7 +340,7 @@ namespace CGAL {
                 close_single_faces(cdt);
 
                 Log log;
-                log.save_cdt_ply(cdt, "tmp" + std::string(PSR) + "lod_0_1" + std::string(PSR) + "1_cdt_clean", "tag");
+                log.save_cdt_ply(cdt, "tmp" + std::string(PSR) + "lod_0_1" + std::string(PSR) + "1_cdt_clean", "tag", FT(0));
             }
 
             void close_gaps(const CDT &cdt) const {
@@ -490,7 +490,7 @@ namespace CGAL {
             void set_components(const Components &components, Projected_points &projected_points) const {
 
                 Log log;
-                log.save_connected_components(m_input, components, "tmp" + std::string(PSR) + "lod_0_1" + std::string(PSR) + "1_components");
+                log.save_connected_components(m_input, components, "tmp" + std::string(PSR) + "lod_0_1" + std::string(PSR) + "2_extracted_components");
 
                 projected_points.clear();
                 Projected_points tmp;

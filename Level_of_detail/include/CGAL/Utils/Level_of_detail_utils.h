@@ -328,8 +328,9 @@ namespace CGAL {
 				}
 			}
 
-			template<class Data_structure, class Projected_points>
-			void compute_cdt(CDT &cdt, const Data_structure &data_structure, const Projected_points &boundary_clutter_projected, const bool add_clutter, const bool make_silent) const {
+			template<class Data_structure, class Projected_points, class FT>
+			void compute_cdt(CDT &cdt, const Data_structure &data_structure, const Projected_points &boundary_clutter_projected, const bool add_clutter, 
+			const bool make_silent, const FT ground_height = FT(0)) const {
 
 				using Containers = typename Data_structure::Containers;
 				using Container  = typename Data_structure::Container;
@@ -386,7 +387,7 @@ namespace CGAL {
 
 				// Save CDT.
 				Log exporter;
-				if (!make_silent) exporter.save_cdt_ply(cdt, "tmp" + std::string(PSR) + "lod_0_1" + std::string(PSR) + "cdt");
+				if (!make_silent) exporter.save_cdt_ply(cdt, "tmp" + std::string(PSR) + "lod_0_1" + std::string(PSR) + "9_cdt", "in", ground_height);
 			}
 
 			int compute_cdt(CDT &cdt, const Segments &segments, const bool silent, const bool sample = false) const {
@@ -434,7 +435,7 @@ namespace CGAL {
 				
 				if (!silent) {
 					Log logex;
-					logex.export_segments_as_obj("tmp" + std::string(PSR) + "cdt_constraints", segments, "stub");
+					logex.export_segments_as_obj("tmp" + std::string(PSR) + "cdt_constraints", segments, "stub", FT(0));
 				}
 
 
@@ -542,7 +543,7 @@ namespace CGAL {
 
 				if (!silent) {
 					Log logex;
-					logex.export_segments_as_obj("tmp" + std::string(PSR) + "cdt_constraints", constraints, "stub");
+					logex.export_segments_as_obj("tmp" + std::string(PSR) + "cdt_constraints", constraints, "stub", FT(0));
 				}
 
 
@@ -845,7 +846,7 @@ namespace CGAL {
 					}
 				}
 
-				if (!silent) log_all.save("tmp" + std::string(PSR) + "lod_0_1" + std::string(PSR) + "input_2d_all", ".xyz");
+				// if (!silent) log_all.save("tmp" + std::string(PSR) + "lod_0_1" + std::string(PSR) + "input_2d_all", ".xyz");
 				
 				// log_in_cdt.save("tmp" + std::string(PSR) + "input_2d_in_cdt", ".xyz");
 				

@@ -61,8 +61,13 @@ namespace CGAL {
 				Color color = Color(192, 192, 192);
 			};
 
-			Level_of_detail_building_splitter() : m_silent(false),
-			m_use_custom_constraints(false), m_constraints_threshold(FT(1)), m_constraints_tolerance(-FT(1) / FT(10)) { }
+			Level_of_detail_building_splitter() : 
+			m_silent(false),
+			m_use_custom_constraints(false), 
+			m_constraints_threshold(FT(1)), 
+			m_constraints_tolerance(-FT(1) / FT(10)),
+			m_ground_height(FT(0)) 
+			{ }
 
 			void make_silent(const bool new_state) {
 				m_silent = new_state;
@@ -75,6 +80,10 @@ namespace CGAL {
 			void set_constraints_threshold(const FT new_value) {
 				assert(new_value > FT(0));
 				m_constraints_threshold = new_value;
+			}
+
+			void set_ground_height(const FT new_value) {
+				m_ground_height = new_value;
 			}
 
 			int split(CDT &cdt, Buildings &buildings, const Segments &segments) { 
@@ -100,7 +109,7 @@ namespace CGAL {
 
 				if (!m_silent) {
 					Log log;
-					log.save_cdt_ply(cdt, "tmp" + std::string(PSR) + "lod_0_1" + std::string(PSR) + "buildings", "bu");
+					log.save_cdt_ply(cdt, "tmp" + std::string(PSR) + "lod_0_1" + std::string(PSR) + "10_buildings", "bu", m_ground_height);
 				}
 
 				// Remove later.
@@ -119,6 +128,8 @@ namespace CGAL {
 
 			FT m_constraints_threshold;
 			const FT m_constraints_tolerance;
+
+			FT m_ground_height;
 
 			void generate_new_building(Building_data &bd) {
 

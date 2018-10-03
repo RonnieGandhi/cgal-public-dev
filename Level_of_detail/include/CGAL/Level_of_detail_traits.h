@@ -33,6 +33,7 @@
 #include <CGAL/Regularizer/Level_of_detail_polygonizer_jean_philippe.h>
 #include <CGAL/Structuring_2/Level_of_detail_structuring_2.h>
 #include <CGAL/Visibility_2/Level_of_detail_visibility_2.h>
+#include <CGAL/Reconstruction/Level_of_detail_lod0_lod1.h>
 #include <CGAL/Graphcut/Level_of_detail_graphcut_2.h>
 #include <CGAL/Graphcut/Level_of_detail_graphcut_3.h>
 
@@ -207,6 +208,8 @@ namespace CGAL {
 			typedef CGAL::LOD::Level_of_detail_roof_partitioning_test<Kernel, Building, Buildings> Roof_partitioning;
 
 			typedef CGAL::LOD::Level_of_detail_triangulation_based_boundary_extractor<Kernel, Container_3D, CDT> Triangulation_based_boundary_extractor;
+
+			typedef CGAL::LOD::Level_of_detail_lod0_lod1<Kernel, typename Lods::Ground, CDT, Building, Buildings> LOD0_LOD1_reconstructor;
 		};
 	}
 }

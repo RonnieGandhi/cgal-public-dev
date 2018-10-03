@@ -186,7 +186,7 @@ namespace CGAL {
 
 				if (!m_silent) {
 					log.clear();
-					log.save_2d_region_growing("tmp" + std::string(PSR) + "lod_0_1" + std::string(PSR) + "region_growing", 
+					log.save_2d_region_growing("tmp" + std::string(PSR) + "lod_0_1" + std::string(PSR) + "4_region_growing", 
 					building_boundaries, building_boundaries_projected, boundary_clutter_projected, m_ground_height);
 				}
 
@@ -377,7 +377,7 @@ namespace CGAL {
 
 				if (!m_silent) {
 					Log log; 
-					log.export_projected_points_with_normals_as_xyz("tmp" + std::string(PSR) + "lod_0_1" + std::string(PSR) + "estimated_normals", boundary_clutter_projected, normals, "unused path");
+					log.export_projected_points_with_normals_as_xyz("tmp" + std::string(PSR) + "lod_0_1" + std::string(PSR) + "4_estimated_normals", boundary_clutter_projected, normals, "unused path", m_ground_height);
 				}
 			}
 

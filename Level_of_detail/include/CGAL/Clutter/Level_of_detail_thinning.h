@@ -491,7 +491,7 @@ namespace CGAL {
 				assert(normals.size() == boundary_clutter_projected.size());
 
 				Log log; 
-				log.export_projected_points_with_normals_as_xyz("tmp" + std::string(PSR) + "complex_with_normals", boundary_clutter_projected, normals, "unused path");
+				log.export_projected_points_with_normals_as_xyz("tmp" + std::string(PSR) + "complex_with_normals", boundary_clutter_projected, normals, "unused path", FT(0));
 			}
 
 			void thin_all_points_with_normals(Projected_points &thinned_points, Corners &corners, 

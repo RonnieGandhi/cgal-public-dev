@@ -67,7 +67,10 @@ namespace CGAL {
             using Colour         = typename Container::Colour;
 
             Level_of_detail_polygon_based_visibility_2(const Input &input, Data_structure &data_structure) :
-            m_silent(false), m_input(input), m_data_structure(data_structure) {
+            m_silent(false), 
+            m_input(input), 
+            m_data_structure(data_structure),
+            m_ground_height(FT(0)) {
                 
                 set_point_labels();
             }
@@ -88,6 +91,10 @@ namespace CGAL {
                 m_silent = new_state;
             }
 
+            void set_ground_height(const FT new_value) {
+                m_ground_height = new_value;
+            }
+
         private:
             bool            m_silent;
             Points          m_points;
@@ -97,6 +104,8 @@ namespace CGAL {
             Data_structure &m_data_structure;
 
             std::shared_ptr<Visibility_strategy> m_visibility_strategy;
+
+            FT m_ground_height;
             
 			inline void set_point_labels() {
 				boost::tie(m_point_labels, boost::tuples::ignore) = m_input.template property_map<Point_label>("label");
@@ -175,7 +184,7 @@ namespace CGAL {
                 assert(containers.size() > 0);
 
                 Log exporter;
-                exporter.save_polygons<Containers, Polygon, Kernel>(containers, "tmp" + std::string(PSR) + "lod_0_1" + std::string(PSR) + "visibility", true);
+                exporter.save_polygons<Containers, Polygon, Kernel>(containers, "tmp" + std::string(PSR) + "lod_0_1" + std::string(PSR) + "8_visibility", true, m_ground_height);
             }
         };
     }
