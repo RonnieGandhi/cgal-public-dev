@@ -19,7 +19,6 @@
 #include <CGAL/linear_least_squares_fitting_2.h>
 #include <CGAL/linear_least_squares_fitting_3.h>
 #include <CGAL/utils.h>
-#include <CGAL/Random.h>
 #include <CGAL/number_utils.h>
 #include <CGAL/constructions_d.h>
 #include <CGAL/Simple_cartesian.h>

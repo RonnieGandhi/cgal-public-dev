@@ -42,7 +42,9 @@ namespace CGAL {
 			const std::string m_prefix_path;
 
             Mylog() : m_prefix_path(std::string(std::getenv("LOD_LOGS_PATH"))) { 
+				
 				out.precision(20);
+				m_rand = Random(0);
 			}
 
 			std::string state() const {

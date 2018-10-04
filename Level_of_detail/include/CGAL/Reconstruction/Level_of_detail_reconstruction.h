@@ -72,7 +72,10 @@ namespace CGAL {
     		m_height_threshold(FT(1) / FT(1000000)),
     		m_area_threshold(FT(1) / FT(1000)),
     		m_num_roofs(-1),
-    		m_num_walls(-1) { }
+    		m_num_walls(-1) { 
+
+				m_rand = Random(0);
+			}
 
 			void operator()(HDS &hds) {
 

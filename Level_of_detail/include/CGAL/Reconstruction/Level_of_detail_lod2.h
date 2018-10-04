@@ -10,7 +10,6 @@
 
 // CGAL includes.
 #include <CGAL/utils.h>
-#include <CGAL/Random.h>
 #include <CGAL/IO/Color.h>
 #include <CGAL/Polyhedron_3.h>
 #include <CGAL/number_utils.h>

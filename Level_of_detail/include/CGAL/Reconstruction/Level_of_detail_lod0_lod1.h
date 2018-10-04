@@ -214,9 +214,10 @@ namespace CGAL {
 
                 Input_facets input_facets;
                 create_roof_input_facets(faces, m_ground_height + building.height, input_facets);
+                create_roof_output_regions(input_facets, output_regions);
 
-                Facets_based_region_growing region_growing(input_facets);
-                region_growing.create_regions(output_regions);
+                // Facets_based_region_growing region_growing(input_facets);
+                // region_growing.create_regions(output_regions);
             }
 
             void create_roof_input_facets(const Floor_faces &faces, const FT height, Input_facets &input_facets) const {
@@ -239,6 +240,12 @@ namespace CGAL {
                 input_facet[2] = Point_3(c.x(), c.y(), height);
 
                 input_facets.push_back(input_facet);
+            }
+
+            void create_roof_output_regions(const Input_facets &input_facets, Output_regions &output_regions) const {
+
+                output_regions.clear();
+                output_regions.push_back(input_facets);
             }
 
             void merge_roofs(Building &building) const {

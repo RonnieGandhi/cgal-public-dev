@@ -86,7 +86,7 @@ namespace CGAL {
             m_fixed_disc_radius(FT(1) / FT(1000)),
             m_tolerance(FT(1) / FT(100000)) {
 
-                srand(time(NULL));
+                srand(0);
             }
 
             void scale(const bool new_state) {

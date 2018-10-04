@@ -290,7 +290,10 @@ namespace CGAL {
 			m_kinetic_number_of_intersections(1),
 			m_use_merged_facets(false),
 			m_connected_component_scale(FT(1)),
-			m_connected_component_min_points(10)
+			m_connected_component_min_points(10),
+			m_merger_scale(-FT(1)),
+			m_merger_proximity(-FT(1)),
+			m_merger_optimize_vertices(false)
 			{ }
 
 
@@ -522,7 +525,8 @@ namespace CGAL {
 				m_regularization_angle_3d 		  = FT(25);
 				m_kinetic_number_of_intersections = 1;
 
-				m_use_merged_facets = false;
+				m_use_merged_facets 	   = false;
+				m_merger_optimize_vertices = false;
 			}
 
 			void set_the_most_important_options() {
@@ -573,6 +577,9 @@ namespace CGAL {
 				m_roof_cleaner_scale = m_imp_scale; // all roofs with the size <= than this value are removed
 
 				m_connected_component_scale = m_imp_scale / FT(2);
+
+				m_merger_scale     = m_imp_scale;
+				m_merger_proximity = m_imp_scale / FT(10);
 			}
 
 			void set_required_parameters() {
@@ -611,7 +618,8 @@ namespace CGAL {
 				add_bool_parameter("-regularize_3d" , m_regularize_3d				 , m_parameters);
 				add_bool_parameter("-extra_boundary", m_use_extra_boundary_extraction, m_parameters);
 
-				add_bool_parameter("-merge", m_use_merged_facets, m_parameters);
+				add_bool_parameter("-merge"			, m_use_merged_facets		, m_parameters);
+				add_bool_parameter("-merge_optimize", m_merger_optimize_vertices, m_parameters);
 
 				// Important.
 				add_val_parameter("-eps"  , m_imp_eps  , m_parameters);
@@ -658,6 +666,9 @@ namespace CGAL {
 
 				add_val_parameter("-cc_scale" , m_connected_component_scale		, m_parameters);
 				add_val_parameter("-cc_min_3d", m_connected_component_min_points, m_parameters);
+
+				add_val_parameter("-merge_scale"	, m_merger_scale	, m_parameters);
+				add_val_parameter("-merge_proximity", m_merger_proximity, m_parameters);
 			}
 
 			void set_user_defined_parameters(const Parameters_wrapper &parameters_wrapper) {
@@ -1617,6 +1628,10 @@ namespace CGAL {
 
 				Coplanar_facets_merger coplanar_facets_merger = Coplanar_facets_merger(buildings, ground_height);
 				
+				coplanar_facets_merger.set_scale(m_merger_scale);
+				coplanar_facets_merger.set_proximity(m_merger_proximity);
+				coplanar_facets_merger.optimize_vertices(m_merger_optimize_vertices);
+
 				coplanar_facets_merger.use_merged_facets(m_use_merged_facets);
 				coplanar_facets_merger.merge();
 
@@ -2274,6 +2289,10 @@ namespace CGAL {
 
 			FT     m_connected_component_scale;
 			size_t m_connected_component_min_points;
+
+			FT   m_merger_scale;
+			FT   m_merger_proximity;
+			bool m_merger_optimize_vertices;
 
 
 			// Assert default values of all global parameters.

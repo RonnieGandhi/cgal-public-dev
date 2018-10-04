@@ -51,7 +51,10 @@ namespace CGAL {
 			typedef typename Kernel::Vector_2  Vector_2;
 			typedef typename Kernel::Segment_2 Ray;
 
-			Uniform_sample_generator() : m_num_samples(3), m_num_rays(2) { }
+			Uniform_sample_generator() : m_num_samples(3), m_num_rays(2) { 
+
+				m_rand = Random(0);
+			}
 
 			void set_number_of_samples(const size_t new_value) {
 				

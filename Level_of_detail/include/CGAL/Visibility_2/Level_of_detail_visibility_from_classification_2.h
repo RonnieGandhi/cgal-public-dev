@@ -25,7 +25,6 @@
 #include <CGAL/Orthogonal_k_neighbor_search.h>
 #include <CGAL/Search_traits_adapter.h>
 #include <CGAL/property_map.h>
-#include <CGAL/Random.h>
 #include <CGAL/number_utils.h>
 #include <CGAL/Delaunay_triangulation_2.h>
 #include <CGAL/Interpolation_traits_2.h>

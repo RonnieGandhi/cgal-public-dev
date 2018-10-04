@@ -5,11 +5,8 @@
 #include <map>
 #include <queue>
 #include <cmath>
-#include <time.h>
 #include <vector>
-#include <stdio.h>
 #include <cassert>
-#include <stdlib.h>
 #include <algorithm>
 
 namespace CGAL {
@@ -48,10 +45,8 @@ namespace CGAL {
 			Level_of_detail_facets_based_region_growing_3(const Input_facets &input_facets) : 
 			m_input_facets(input_facets),
 			m_no_rg(false),
-			m_tolerance(FT(1) / FT(100000)) { 
-
-				srand(time(NULL));
-			}
+			m_tolerance(FT(1) / FT(100000)) 
+			{ }
 
 			void create_regions(Output_regions &output_regions) const {
 				
