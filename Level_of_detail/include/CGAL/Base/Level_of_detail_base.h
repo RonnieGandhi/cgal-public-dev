@@ -788,6 +788,11 @@ namespace CGAL {
 					log.export_points_using_indices(input, ground_idxs, "tmp" + std::string(PSR) + "lod_0_1" + std::string(PSR) + "0_ground_points");
 					log.export_points_using_indices(input, building_boundary_idxs, "tmp" + std::string(PSR) + "lod_0_1" + std::string(PSR) + "0_boundary_points");
 					log.export_points_using_indices(input, building_interior_idxs, "tmp" + std::string(PSR) + "lod_0_1" + std::string(PSR) + "0_interior_points");
+
+					/*
+					log.export_points_using_indices_projected(input, ground_idxs, "tmp" + std::string(PSR) + "lod_0_1" + std::string(PSR) + "0_ground_points_projected");
+					log.export_points_using_indices_projected(input, building_boundary_idxs, "tmp" + std::string(PSR) + "lod_0_1" + std::string(PSR) + "0_boundary_points_projected");
+					log.export_points_using_indices_projected(input, building_interior_idxs, "tmp" + std::string(PSR) + "lod_0_1" + std::string(PSR) + "0_interior_points_projected"); */
 				}
 
 				std::cout << "ground: " << ground_idxs.size() << "; boundary: " << building_boundary_idxs.size() << "; interior: " << building_interior_idxs.size() << "; " << std::endl;
@@ -1720,6 +1725,8 @@ namespace CGAL {
 				Plane_3 base_ground_plane, fitted_ground_plane;
 				ground_fitting(base_ground_plane, fitted_ground_plane, fitted_ground_box, ground_idxs, input, ++exec_step);
 				ground_height = get_average_target_height(fitted_ground_box);
+				
+				// std::cout << "ground height: " << ground_height << std::endl;
 
 				// (03) ----------------------------------
 				

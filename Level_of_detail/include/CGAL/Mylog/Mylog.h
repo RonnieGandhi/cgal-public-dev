@@ -1708,6 +1708,37 @@ namespace CGAL {
 				save(filename, ".ply");
 			}
 
+			template<class Input, class Indices>
+			void save_connected_components_projected(const Input &input, const std::vector<Indices> &components, const std::string &filename) {
+
+				clear();
+
+				size_t num_points = 0;
+				for (size_t i = 0; i < components.size(); ++i) num_points += components[i].size();
+
+				out << 
+				"ply" 				   + std::string(PN) + "" <<
+				"format ascii 1.0"     + std::string(PN) + "" << 
+				"element vertex " << num_points << "" + std::string(PN) + "" << 
+				"property double x"    + std::string(PN) + "" << 
+				"property double y"    + std::string(PN) + "" << 
+				"property double z"    + std::string(PN) + "" <<
+				"property uchar red"   + std::string(PN) + "" << 
+				"property uchar green" + std::string(PN) + "" <<
+				"property uchar blue"  + std::string(PN) + "" <<
+				"end_header" 		   + std::string(PN) + "";
+
+				for (size_t i = 0; i < components.size(); ++i) {
+					
+					const Indices &indices = components[i];
+					const Color    color   = generate_random_color();
+
+					for (size_t j = 0; j < indices.size(); ++j)
+						out << input.point(indices[j]).x() << " " << input.point(indices[j]).y() << " " << 461.348 << " " << color << std::endl;
+				}
+				save(filename, ".ply");
+			}
+
 			template<class Traits, class Container>
 			void save_ply(const Container &input, 
 						  const std::string &fileName,
@@ -2692,6 +2723,14 @@ namespace CGAL {
 				clear();
 				for (size_t i = 0; i < indices.size(); ++i) out << input.point(indices[i]) << std::endl;
 				save(filename, ".xyz");	
+			}
+
+			template<class Container, class Indices>
+			void export_points_using_indices_projected(const Container &input, const Indices &indices, const std::string &filename) {
+
+				clear();
+				for (size_t i = 0; i < indices.size(); ++i) out << input.point(indices[i]).x() << " " << input.point(indices[i]).y() << " " << 461.348 << std::endl;
+				save(filename, ".xyz");
 			}
 
 			template<class Point_3>

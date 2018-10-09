@@ -491,6 +491,8 @@ namespace CGAL {
 
                 Log log;
                 log.save_connected_components(m_input, components, "tmp" + std::string(PSR) + "lod_0_1" + std::string(PSR) + "2_extracted_components");
+                
+                // log.save_connected_components_projected(m_input, components, "tmp" + std::string(PSR) + "lod_0_1" + std::string(PSR) + "2_extracted_components_projected");
 
                 projected_points.clear();
                 Projected_points tmp;

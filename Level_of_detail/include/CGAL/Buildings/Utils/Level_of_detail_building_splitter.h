@@ -68,7 +68,7 @@ namespace CGAL {
 			m_constraints_tolerance(-FT(1) / FT(10)),
 			m_ground_height(FT(0)) { 
 
-				m_rand = Random(0);
+				m_rand = Random(1);
 			}
 
 			void make_silent(const bool new_state) {
