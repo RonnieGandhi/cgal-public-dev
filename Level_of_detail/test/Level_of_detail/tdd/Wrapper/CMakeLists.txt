@@ -131,8 +131,8 @@ if (CGAL_FOUND)
 
 	add_executable(lod ${sources})
 
-	target_link_libraries(lod ${OpenCV_LIBS} ${GDAL_LIBRARY} ${Boost_LIBRARIES} -L/usr/local/Cellar/gcc/8.1.0/lib/gcc/8/ -lgfortran 
-	-L/usr/local/Cellar/openblas/0.2.20_1/lib/ -lblas -llapack ma27 qpbase qpdense qpgensparse qpgondzio qpsparse)
+	target_link_libraries(lod ${OpenCV_LIBS} ${GDAL_LIBRARY} ${Boost_LIBRARIES} -L/usr/local/Cellar/gcc/8.2.0/lib/gcc/8/ -lgfortran 
+	-L/usr/local/Cellar/openblas/0.3.3/lib/ -lblas -llapack ma27 qpbase qpdense qpgensparse qpgondzio qpsparse)
 
 else()
 	message(STATUS "This program requires the CGAL library and will not be compiled!")
